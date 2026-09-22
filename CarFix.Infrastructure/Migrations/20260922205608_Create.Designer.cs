@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarFix.Infrastructure.Migrations
 {
     [DbContext(typeof(CarFixDbContext))]
-    [Migration("20260916201846_111")]
-    partial class _111
+    [Migration("20260922205608_Create")]
+    partial class Create
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -591,9 +591,6 @@ namespace CarFix.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("IsDefault")
                         .HasColumnType("boolean");
 
@@ -610,12 +607,15 @@ namespace CarFix.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("VehicleOwnererId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
+                    b.HasIndex("VehicleOwnererId");
 
                     b.ToTable("Vehicles", (string)null);
                 });
@@ -883,13 +883,13 @@ namespace CarFix.Infrastructure.Migrations
 
             modelBuilder.Entity("CarFix.Domain.Entities.Vehicle", b =>
                 {
-                    b.HasOne("CarFix.Domain.Entities.User", "Customer")
+                    b.HasOne("CarFix.Domain.Entities.User", "VehicleOwner")
                         .WithMany("Vehicles")
-                        .HasForeignKey("CustomerId")
+                        .HasForeignKey("VehicleOwnererId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Customer");
+                    b.Navigation("VehicleOwner");
                 });
 
             modelBuilder.Entity("CarFix.Domain.Entities.WalletTransaction", b =>

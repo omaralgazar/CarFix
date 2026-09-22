@@ -588,9 +588,6 @@ namespace CarFix.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("IsDefault")
                         .HasColumnType("boolean");
 
@@ -607,12 +604,15 @@ namespace CarFix.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("VehicleOwnererId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
+                    b.HasIndex("VehicleOwnererId");
 
                     b.ToTable("Vehicles", (string)null);
                 });
@@ -880,13 +880,13 @@ namespace CarFix.Infrastructure.Migrations
 
             modelBuilder.Entity("CarFix.Domain.Entities.Vehicle", b =>
                 {
-                    b.HasOne("CarFix.Domain.Entities.User", "Customer")
+                    b.HasOne("CarFix.Domain.Entities.User", "VehicleOwner")
                         .WithMany("Vehicles")
-                        .HasForeignKey("CustomerId")
+                        .HasForeignKey("VehicleOwnererId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Customer");
+                    b.Navigation("VehicleOwner");
                 });
 
             modelBuilder.Entity("CarFix.Domain.Entities.WalletTransaction", b =>

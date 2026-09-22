@@ -9,8 +9,8 @@ namespace CarFix.Domain.Entities
     public class Vehicle
     {
         public Guid Id { get; set; }
-        public Guid CustomerId { get; set; }
-        public User Customer { get; set; }
+        public Guid VehicleOwnererId { get; set; }
+        public User VehicleOwner { get; set; }
         public string Brand { get; set; }
         public string Model { get; set; }
         public int Year { get; set; }

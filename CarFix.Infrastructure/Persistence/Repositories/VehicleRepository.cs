@@ -14,7 +14,7 @@ namespace CarFix.Infrastructure.Persistence.Repositories
         }
 
         public Task<bool> HasAnyVehicleAsync(Guid customerId) =>
-            _context.Vehicles.AnyAsync(v => v.CustomerId == customerId && !v.IsDeleted);
+            _context.Vehicles.AnyAsync(v => v.VehicleOwnererId == customerId && !v.IsDeleted);
 
         public async Task AddAsync(Vehicle vehicle) =>
             await _context.Vehicles.AddAsync(vehicle);
@@ -36,13 +36,13 @@ namespace CarFix.Infrastructure.Persistence.Repositories
         public Task<List<Vehicle>> GetAllByCustomerAsync(Guid customerId)
         {
             return _context.Vehicles
-                .Where(v => v.CustomerId == customerId && !v.IsDeleted)
+                .Where(v => v.VehicleOwnererId == customerId && !v.IsDeleted)
                 .ToListAsync();
         }
 
         public Task<Vehicle> GetFirstRemainingVehicleAsync(Guid customerId, Guid excludeVehicleId)
         {
-            return _context.Vehicles.FirstOrDefaultAsync(v => v.CustomerId == customerId
+            return _context.Vehicles.FirstOrDefaultAsync(v => v.VehicleOwnererId == customerId
                                                       && !v.IsDeleted
                                                       && v.Id != excludeVehicleId);
         }

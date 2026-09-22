@@ -65,6 +65,8 @@ namespace CarFix.Application.Services
             if (!Enum.TryParse<SpecialtyType>(dto.Type, true, out var specialtyType))
                 throw new BadRequestException("Invalid specialty type.");
 
+            // ضمان وجود القائمة وعدم وجود تكرار
+            center.Specialties ??= new List<CenterSpecialty>();
             if (center.Specialties.Any(s => s.Type == specialtyType && s.Value.Equals(dto.Value, StringComparison.OrdinalIgnoreCase)))
                 throw new BadRequestException("This specialty already exists for this center.");
 
@@ -76,9 +78,8 @@ namespace CarFix.Application.Services
                 ServiceCenterId = center.Id
             };
 
-            center.Specialties ??= new List<CenterSpecialty>();
-            center.Specialties.Add(specialty);
-            _repository.Update(center);
+            // إضافة الكائن الفرعي فقط بدون عمل Update للكيان الأب بالكامل
+            await _repository.AddSpecialtyAsync(specialty);
             await _repository.SaveChangesAsync();
 
             return MapToProfileDto(center);

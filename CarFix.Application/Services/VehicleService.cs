@@ -29,7 +29,7 @@ namespace CarFix.Application.Services
         {
             var vehicle = await _repository.GetByIdAsync(vehicleId);
 
-            if (vehicle == null || vehicle.CustomerId != customerId)
+            if (vehicle == null || vehicle.VehicleOwnererId != customerId)
                 throw new NotFoundException("Vehicle not found");
 
             return vehicle;
@@ -42,7 +42,7 @@ namespace CarFix.Application.Services
             var vehicle = new Vehicle
             {
                 Id = Guid.NewGuid(),
-                CustomerId = customerId,
+                VehicleOwnererId = customerId,
                 Brand = dto.Brand,
                 Model = dto.Model,
                 Year = dto.Year,

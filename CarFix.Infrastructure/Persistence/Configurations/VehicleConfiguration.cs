@@ -19,9 +19,9 @@ namespace CarFix.Infrastructure.Persistence.Configurations
             builder.Property(v => v.IsDefault).IsRequired();
             builder.Property(v => v.IsDeleted).IsRequired();
 
-            builder.HasOne(v => v.Customer)
+            builder.HasOne(v => v.VehicleOwner)
                 .WithMany(u => u.Vehicles)
-                .HasForeignKey(v => v.CustomerId)
+                .HasForeignKey(v => v.VehicleOwnererId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasQueryFilter(v => !v.IsDeleted);

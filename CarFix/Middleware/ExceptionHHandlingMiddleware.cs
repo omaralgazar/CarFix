@@ -37,7 +37,7 @@ namespace CarFix.API.Middleware
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "UnauthorizedAction"),
                 ArgumentException => (HttpStatusCode.BadRequest, ex.Message),
                 ForbiddenException => (HttpStatusCode.Forbidden, ex.Message),
-                BadHttpRequestException => (HttpStatusCode.BadRequest, ex.Message),
+                BadRequestException => (HttpStatusCode.BadRequest, ex.Message),
                 ConflictException => (HttpStatusCode.Conflict, ex.Message),
                 _ => (HttpStatusCode.InternalServerError, "Unexpected error occurred , Please try again later")
             };

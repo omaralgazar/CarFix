@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CarFix.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class _111 : Migration
+    public partial class Create : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -128,7 +128,7 @@ namespace CarFix.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VehicleOwnererId = table.Column<Guid>(type: "uuid", nullable: false),
                     Brand = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Year = table.Column<int>(type: "integer", nullable: false),
@@ -140,8 +140,8 @@ namespace CarFix.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Vehicles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Vehicles_Users_CustomerId",
-                        column: x => x.CustomerId,
+                        name: "FK_Vehicles_Users_VehicleOwnererId",
+                        column: x => x.VehicleOwnererId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -556,9 +556,9 @@ namespace CarFix.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Vehicles_CustomerId",
+                name: "IX_Vehicles_VehicleOwnererId",
                 table: "Vehicles",
-                column: "CustomerId");
+                column: "VehicleOwnererId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Wallets_OwnerId_OwnerType",
