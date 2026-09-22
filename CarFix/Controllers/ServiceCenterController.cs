@@ -19,7 +19,7 @@ namespace CarFix.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,ServiceCenter,Customer")]
+        [Authorize(Roles = "Admin,ServiceCenter,Customer ,Staff")]
         public async Task<IActionResult> GetServiceCenterById(Guid id)
         {
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;

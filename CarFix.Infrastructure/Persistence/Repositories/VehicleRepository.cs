@@ -22,8 +22,13 @@ namespace CarFix.Infrastructure.Persistence.Repositories
         public Task SaveChangesAsync() =>
             _context.SaveChangesAsync();
 
-        public Task<Vehicle> GetByIdAsync(Guid vehicleId) =>
-            _context.Vehicles.FirstOrDefaultAsync(v => v.Id == vehicleId);
+        public Task<Vehicle?> GetByIdAsync(Guid vehicleId)
+        {
+            return _context.Vehicles
+                .FirstOrDefaultAsync(vehicle =>
+                    vehicle.Id == vehicleId &&
+                    !vehicle.IsDeleted);
+        }
 
         public async Task DeleteAsync(Guid vehicleId)
         {

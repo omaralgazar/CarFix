@@ -36,13 +36,28 @@ namespace CarFix.Infrastructure.Persistence.Repositories
             await _context.RepairRequests.AddAsync(repairRequest);
         }
 
-        public async Task<IEnumerable<ServiceCenter>> GetMatchingServiceCentersAsync(SpecialtyType type, string value)
+        public async Task<List<ServiceCenter>> GetMatchingServiceCentersAsync(
+                 string issueCategory,
+                 string vehicleBrand)
         {
             return await _context.ServiceCenters
-                .Include(c => c.Specialties)
-                .Where(c => !c.IsDeleted
-                         && c.VerificationStatus == VerificationStatus.Approved
-                         && c.Specialties.Any(s => s.Type == type && s.Value.ToLower() == value.ToLower()))
+                .Where(center =>
+                    !center.IsDeleted &&
+                    !center.IsBanned &&
+                    center.VerificationStatus == VerificationStatus.Approved &&
+
+                    center.Specialties.Any(specialty =>
+                        specialty.Type == SpecialtyType.IssueCategory &&
+                        EF.Functions.ILike(specialty.Value, issueCategory)) &&
+
+                    (
+                        !center.Specialties.Any(specialty =>
+                            specialty.Type == SpecialtyType.CarBrand) ||
+
+                        center.Specialties.Any(specialty =>
+                            specialty.Type == SpecialtyType.CarBrand &&
+                            EF.Functions.ILike(specialty.Value, vehicleBrand))
+                    ))
                 .ToListAsync();
         }
         public async Task SaveChangesAsync()

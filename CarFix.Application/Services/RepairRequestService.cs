@@ -1,5 +1,6 @@
 ﻿using CarFix.Application.DTOs.Customer.RepairRequest;
 using CarFix.Application.Exceptions;
+using CarFix.Application.Interfaces;
 using CarFix.Application.Interfaces.IRepositories;
 using CarFix.Domain.Entities;
 using CarFix.Domain.Enums;
@@ -9,7 +10,7 @@ using System.Text;
 
 namespace CarFix.Application.Services
 {
-    public class RepairRequestService
+    public class RepairRequestService : IRepairRequestService
     {
         private readonly IRepairRequestRepository _repairRequestRepository;
         private readonly IVehicleRepository _vehicleRepository;
@@ -39,6 +40,7 @@ namespace CarFix.Application.Services
                 IssueCategory = dto.IssueCategory,
                 IssueDescription = dto.IssueDescription,
                 Status = RepairRequestStatus.OpenForBidding,
+                ImageUrls = dto.ImageUrls,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -47,11 +49,38 @@ namespace CarFix.Application.Services
 
             // 4. استعلام المراكز المتوافقة مع الطلب (Query Matching)
             var matchingCenters = await _repairRequestRepository
-                .GetMatchingServiceCentersAsync(specialtyType, dto.IssueDescription);
+                                        .GetMatchingServiceCentersAsync(
+                                            repairRequest.IssueCategory,
+                                            vehicle.Brand);
 
             // ملحوظة: مبدئياً الاستعلام يجهز المراكز المتوافقة (مستقبلاً يتم بث إشعارات SignalR لها)
 
             return MapToResponseDto(repairRequest, vehicle);
+        }
+
+
+        public async Task CancelRequestAsync(
+    Guid customerUserId,
+    Guid requestId)
+        {
+            var repairRequest = await _repairRequestRepository
+                .GetByIdAsync(requestId);
+
+            if (repairRequest == null ||
+                repairRequest.CustomerId != customerUserId)
+            {
+                throw new NotFoundException("Repair request not found.");
+            }
+
+            if (repairRequest.Status != RepairRequestStatus.OpenForBidding)
+            {
+                throw new BadRequestException(
+                    "Only requests open for bidding can be cancelled.");
+            }
+
+            repairRequest.Status = RepairRequestStatus.Cancelled;
+
+            await _repairRequestRepository.SaveChangesAsync();
         }
 
         public async Task<List<RepairRequestResponseDto>> GetRepairRequestsByCustomerAsync(Guid customerId)

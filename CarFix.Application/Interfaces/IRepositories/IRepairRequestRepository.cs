@@ -11,7 +11,9 @@ namespace CarFix.Application.Interfaces.IRepositories
         Task<RepairRequest?> GetByIdAsync(Guid id);
         Task<IEnumerable<RepairRequest>> GetByCustomerIdAsync(Guid customerUserId);
         Task AddAsync(RepairRequest repairRequest);
-        Task<IEnumerable<ServiceCenter>> GetMatchingServiceCentersAsync(SpecialtyType type, string value);
+        Task<List<ServiceCenter>> GetMatchingServiceCentersAsync(
+                string issueCategory,
+                string vehicleBrand);
         Task SaveChangesAsync();
     }
 }
