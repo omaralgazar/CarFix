@@ -9,7 +9,9 @@ namespace CarFix.API.Middleware
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+        public ExceptionHandlingMiddleware(
+            RequestDelegate next,
+            ILogger<ExceptionHandlingMiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -19,38 +21,54 @@ namespace CarFix.API.Middleware
         {
             try
             {
-                await _next(context);  
+                await _next(context);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                await HandleExceptionAsync(context, ex);
+                if (context.Response.HasStarted)
+                {
+                    _logger.LogError(
+                        exception,
+                        "An exception occurred after the response started.");
+
+                    throw;
+                }
+
+                await HandleExceptionAsync(context, exception);
             }
         }
 
-
-
-        private async Task HandleExceptionAsync(HttpContext context, Exception ex)
+        private async Task HandleExceptionAsync(
+            HttpContext context,
+            Exception exception)
         {
-            var (statusCode, message) = ex switch
+            var (statusCode, message) = exception switch
             {
-                NotFoundException => (HttpStatusCode.NotFound, ex.Message),
-                UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "UnauthorizedAction"),
-                ArgumentException => (HttpStatusCode.BadRequest, ex.Message),
-                ForbiddenException => (HttpStatusCode.Forbidden, ex.Message),
-                BadRequestException => (HttpStatusCode.BadRequest, ex.Message),
-                ConflictException => (HttpStatusCode.Conflict, ex.Message),
-                _ => (HttpStatusCode.InternalServerError, "Unexpected error occurred , Please try again later")
+                NotFoundException => (HttpStatusCode.NotFound, exception.Message),
+                BadRequestException => (HttpStatusCode.BadRequest, exception.Message),
+                UnauthorizedAccessException =>
+                    (HttpStatusCode.Unauthorized, "Unauthorized action."),
+                ForbiddenException => (HttpStatusCode.Forbidden, exception.Message),
+                ConflictException => (HttpStatusCode.Conflict, exception.Message),
+                ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
+                _ => (
+                    HttpStatusCode.InternalServerError,
+                    "Unexpected error occurred. Please try again later.")
             };
 
-            
-            _logger.LogError(ex, "Unhandled exception occurred");
+            _logger.LogError(
+                exception,
+                "Unhandled exception occurred. Status code: {StatusCode}",
+                (int)statusCode);
 
+            context.Response.Clear();
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
 
             var response = new { error = message };
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+
+            await context.Response.WriteAsync(
+                JsonSerializer.Serialize(response));
         }
     }
 }
-

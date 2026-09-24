@@ -45,19 +45,12 @@ namespace CarFix.Infrastructure.Persistence.Repositories
                     !center.IsDeleted &&
                     !center.IsBanned &&
                     center.VerificationStatus == VerificationStatus.Approved &&
-
-                    center.Specialties.Any(specialty =>
-                        specialty.Type == SpecialtyType.IssueCategory &&
-                        EF.Functions.ILike(specialty.Value, issueCategory)) &&
-
-                    (
-                        !center.Specialties.Any(specialty =>
-                            specialty.Type == SpecialtyType.CarBrand) ||
-
-                        center.Specialties.Any(specialty =>
-                            specialty.Type == SpecialtyType.CarBrand &&
-                            EF.Functions.ILike(specialty.Value, vehicleBrand))
-                    ))
+                    center.Capabilities.Any(capability =>
+                        capability.IssueCategory == issueCategory &&
+                        (
+                            capability.VehicleBrand == null ||
+                            capability.VehicleBrand == vehicleBrand
+                        )))
                 .ToListAsync();
         }
         public async Task SaveChangesAsync()

@@ -27,11 +27,7 @@ namespace CarFix.Application.Services
             if (vehicle == null || vehicle.VehicleOwnererId != customerUserId)
                 throw new NotFoundException("Vehicle not found or does not belong to the user.");
 
-            // 2. التحقق من صحة نوع التخصص
-            if (!Enum.TryParse<SpecialtyType>(dto.IssueDescription, true, out var specialtyType))
-                throw new BadRequestException("Invalid specialty type.");
 
-            // 3. إنشاء كائن الطلب
             var repairRequest = new RepairRequest
             {
                 Id = Guid.NewGuid(),
@@ -47,21 +43,19 @@ namespace CarFix.Application.Services
             await _repairRequestRepository.AddAsync(repairRequest);
             await _repairRequestRepository.SaveChangesAsync();
 
-            // 4. استعلام المراكز المتوافقة مع الطلب (Query Matching)
             var matchingCenters = await _repairRequestRepository
                                         .GetMatchingServiceCentersAsync(
                                             repairRequest.IssueCategory,
-                                            vehicle.Brand);
+                                            vehicle.Brand.Trim().ToUpperInvariant());
 
-            // ملحوظة: مبدئياً الاستعلام يجهز المراكز المتوافقة (مستقبلاً يتم بث إشعارات SignalR لها)
 
             return MapToResponseDto(repairRequest, vehicle);
         }
 
 
         public async Task CancelRequestAsync(
-    Guid customerUserId,
-    Guid requestId)
+                                                Guid customerUserId,
+                                                Guid requestId)     
         {
             var repairRequest = await _repairRequestRepository
                 .GetByIdAsync(requestId);
@@ -86,17 +80,7 @@ namespace CarFix.Application.Services
         public async Task<List<RepairRequestResponseDto>> GetRepairRequestsByCustomerAsync(Guid customerId)
         {
             var repairRequests = await _repairRequestRepository.GetByCustomerIdAsync(customerId);
-            var responseDtos = new List<RepairRequestResponseDto>();
-            foreach (var request in repairRequests)
-            {
-                var vehicle = await _vehicleRepository.GetByIdAsync(request.VehicleId);
-                if (vehicle == null)
-                {
-                    throw new Exception("Vehicle not found.");
-                }
-                responseDtos.Add(MapToResponseDto(request, vehicle));
-            }
-            return responseDtos;
+            return repairRequests.Select(r => MapToResponseDto(r, r.Vehicle)).ToList();
         }
 
         public async Task<RepairRequestResponseDto> GetRequestByIdAsync(Guid customerUserId, Guid requestId)
@@ -105,11 +89,7 @@ namespace CarFix.Application.Services
             if (request == null || request.CustomerId != customerUserId)
                 throw new NotFoundException("Repair request not found.");
 
-            var vehicle = await _vehicleRepository.GetByIdAsync(request.VehicleId);
-            if (vehicle == null)
-                throw new Exception("Vehicle not found.");
-
-            return MapToResponseDto(request, vehicle);
+            return MapToResponseDto(request, request.Vehicle);
         }
         private static RepairRequestResponseDto MapToResponseDto(RepairRequest repairRequest, Vehicle vehicle)
         {

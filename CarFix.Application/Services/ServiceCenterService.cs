@@ -16,36 +16,45 @@ namespace CarFix.Application.Services
             _repository = repository;
         }
 
-        public async Task<CenterProfileResponseDto> GetProfileAsync(Guid serviceCenterId)
+        public async Task<CenterProfileResponseDto> GetProfileAsync(
+            Guid serviceCenterId)
         {
             var serviceCenter = await _repository.GetByIdAsync(serviceCenterId);
+
             if (serviceCenter == null || serviceCenter.IsDeleted)
                 throw new NotFoundException("Service center not found.");
 
             return MapToProfileDto(serviceCenter);
         }
 
-        public async Task<CenterProfileResponseDto> GetProfileByOwnerIdAsync(Guid ownerId)
+        public async Task<CenterProfileResponseDto> GetProfileByOwnerIdAsync(
+            Guid ownerId)
         {
             var serviceCenter = await _repository.GetByOwnerIdAsync(ownerId);
+
             if (serviceCenter == null || serviceCenter.IsDeleted)
                 throw new NotFoundException("Service center not found.");
 
             return MapToProfileDto(serviceCenter);
         }
 
-        public async Task<CenterProfileResponseDto> UpdateProfileAsync(Guid ownerUserId, UpdateCenterProfileDto dto)
+        public async Task<CenterProfileResponseDto> UpdateProfileAsync(
+            Guid ownerUserId,
+            UpdateCenterProfileDto dto)
         {
             var center = await _repository.GetByOwnerIdAsync(ownerUserId);
+
             if (center == null || center.IsDeleted)
                 throw new NotFoundException("Service center not found.");
 
             if (!string.IsNullOrWhiteSpace(dto.Name))
-                center.Name = dto.Name;
+                center.Name = dto.Name.Trim();
+
             if (!string.IsNullOrWhiteSpace(dto.Address))
-                center.Address = dto.Address;
+                center.Address = dto.Address.Trim();
+
             if (!string.IsNullOrWhiteSpace(dto.Phone))
-                center.Phone = dto.Phone;
+                center.Phone = dto.Phone.Trim();
 
             _repository.Update(center);
             await _repository.SaveChangesAsync();
@@ -53,58 +62,78 @@ namespace CarFix.Application.Services
             return MapToProfileDto(center);
         }
 
-        public async Task<CenterProfileResponseDto> AddSpecialtyAsync(Guid ownerUserId, AddSpecialtyDto dto)
+        public async Task<CenterProfileResponseDto> AddCapabilityAsync(
+            Guid ownerUserId,
+            AddCenterCapabilityDto dto)
         {
             var center = await _repository.GetByOwnerIdAsync(ownerUserId);
+
             if (center == null || center.IsDeleted)
                 throw new NotFoundException("Service center not found.");
 
-            if (string.IsNullOrWhiteSpace(dto.Type) || string.IsNullOrWhiteSpace(dto.Value))
-                throw new BadRequestException("Specialty type and value cannot be empty.");
+            var issueCategory = NormalizeRequiredValue(
+                dto.IssueCategory,
+                "Issue category is required.");
 
-            if (!Enum.TryParse<SpecialtyType>(dto.Type, true, out var specialtyType))
-                throw new BadRequestException("Invalid specialty type.");
+            var vehicleBrand = NormalizeOptionalValue(dto.VehicleBrand);
 
-            // ضمان وجود القائمة وعدم وجود تكرار
-            center.Specialties ??= new List<CenterSpecialty>();
-            if (center.Specialties.Any(s => s.Type == specialtyType && s.Value.Equals(dto.Value, StringComparison.OrdinalIgnoreCase)))
-                throw new BadRequestException("This specialty already exists for this center.");
+            center.Capabilities ??= new List<CenterCapability>();
 
-            var specialty = new CenterSpecialty
+            var capabilityAlreadyExists = center.Capabilities.Any(capability =>
+                capability.IssueCategory == issueCategory &&
+                capability.VehicleBrand == vehicleBrand);
+
+            if (capabilityAlreadyExists)
+                throw new BadRequestException(
+                    "This capability already exists for this service center.");
+
+            var capability = new CenterCapability
             {
                 Id = Guid.NewGuid(),
-                Type = specialtyType,
-                Value = dto.Value,
-                ServiceCenterId = center.Id
+                ServiceCenterId = center.Id,
+                IssueCategory = issueCategory,
+                VehicleBrand = vehicleBrand
             };
 
-            // إضافة الكائن الفرعي فقط بدون عمل Update للكيان الأب بالكامل
-            await _repository.AddSpecialtyAsync(specialty);
+            await _repository.AddCapabilityAsync(capability);
             await _repository.SaveChangesAsync();
 
             return MapToProfileDto(center);
         }
 
-        public async Task<CenterProfileResponseDto> UpdateSpecialtyAsync(Guid ownerUserId, Guid specialtyId, UpdateCenterSpecialityDto dto)
+        public async Task<CenterProfileResponseDto> UpdateCapabilityAsync(
+            Guid ownerUserId,
+            Guid capabilityId,
+            UpdateCenterCapabilityDto dto)
         {
             var center = await _repository.GetByOwnerIdAsync(ownerUserId);
+
             if (center == null || center.IsDeleted)
                 throw new NotFoundException("Service center not found.");
 
-            var specialty = center.Specialties.FirstOrDefault(s => s.Id == specialtyId);
-            if (specialty == null)
-                throw new NotFoundException("Specialty not found.");
+            var capability = center.Capabilities
+                .FirstOrDefault(item => item.Id == capabilityId);
 
-            if (!string.IsNullOrWhiteSpace(dto.Type))
-            {
-                if (!Enum.TryParse<SpecialtyType>(dto.Type, true, out var specialtyType))
-                    throw new BadRequestException("Invalid specialty type.");
+            if (capability == null)
+                throw new NotFoundException("Capability not found.");
 
-                specialty.Type = specialtyType;
-            }
+            var issueCategory = NormalizeRequiredValue(
+                dto.IssueCategory,
+                "Issue category is required.");
 
-            if (!string.IsNullOrWhiteSpace(dto.Value))
-                specialty.Value = dto.Value;
+            var vehicleBrand = NormalizeOptionalValue(dto.VehicleBrand);
+
+            var capabilityAlreadyExists = center.Capabilities.Any(item =>
+                item.Id != capabilityId &&
+                item.IssueCategory == issueCategory &&
+                item.VehicleBrand == vehicleBrand);
+
+            if (capabilityAlreadyExists)
+                throw new BadRequestException(
+                    "This capability already exists for this service center.");
+
+            capability.IssueCategory = issueCategory;
+            capability.VehicleBrand = vehicleBrand;
 
             _repository.Update(center);
             await _repository.SaveChangesAsync();
@@ -112,28 +141,38 @@ namespace CarFix.Application.Services
             return MapToProfileDto(center);
         }
 
-        public async Task<CenterProfileResponseDto> RemoveSpecialtyAsync(Guid ownerUserId, Guid specialtyId)
+        public async Task<CenterProfileResponseDto> RemoveCapabilityAsync(
+            Guid ownerUserId,
+            Guid capabilityId)
         {
             var center = await _repository.GetByOwnerIdAsync(ownerUserId);
+
             if (center == null || center.IsDeleted)
                 throw new NotFoundException("Service center not found.");
 
-            var specialty = center.Specialties.FirstOrDefault(s => s.Id == specialtyId);
-            if (specialty == null)
-                throw new NotFoundException("Specialty not found.");
+            var capability = center.Capabilities
+                .FirstOrDefault(item => item.Id == capabilityId);
 
-            center.Specialties.Remove(specialty);
-            _repository.Update(center);
+            if (capability == null)
+                throw new NotFoundException("Capability not found.");
+
+            _repository.RemoveCapability(capability);
             await _repository.SaveChangesAsync();
 
             return MapToProfileDto(center);
         }
-        public async Task<CenterPublicProfileResponseDto> GetPublicProfileAsync(Guid serviceCenterId)
+
+        public async Task<CenterPublicProfileResponseDto> GetPublicProfileAsync(
+            Guid serviceCenterId)
         {
             var serviceCenter = await _repository.GetByIdAsync(serviceCenterId);
 
-            if (serviceCenter == null || serviceCenter.IsDeleted || serviceCenter.VerificationStatus != VerificationStatus.Approved)
+            if (serviceCenter == null ||
+                serviceCenter.IsDeleted ||
+                serviceCenter.VerificationStatus != VerificationStatus.Approved)
+            {
                 throw new NotFoundException("Service center not found.");
+            }
 
             return new CenterPublicProfileResponseDto
             {
@@ -142,14 +181,10 @@ namespace CarFix.Application.Services
                 Address = serviceCenter.Address,
                 Phone = serviceCenter.Phone,
                 Rating = serviceCenter.Rating,
-                Specialties = serviceCenter.Specialties.Select(s => new CenterSpecialtyResponseDto
-                {
-                    Id = s.Id,
-                    Type = s.Type.ToString(),
-                    Value = s.Value
-                }).ToList()
+                Capabilities = MapCapabilities(serviceCenter.Capabilities)
             };
         }
+
         private static CenterProfileResponseDto MapToProfileDto(ServiceCenter center)
         {
             return new CenterProfileResponseDto
@@ -160,13 +195,39 @@ namespace CarFix.Application.Services
                 Phone = center.Phone,
                 Rating = center.Rating,
                 VerificationStatus = center.VerificationStatus.ToString(),
-                Specialties = center.Specialties?.Select(s => new CenterSpecialtyResponseDto
-                {
-                    Id = s.Id,
-                    Type = s.Type.ToString(),
-                    Value = s.Value
-                }).ToList() ?? new List<CenterSpecialtyResponseDto>()
+                Capabilities = MapCapabilities(center.Capabilities)
             };
+        }
+
+        private static List<CenterCapabilityResponseDto> MapCapabilities(
+            ICollection<CenterCapability>? capabilities)
+        {
+            return capabilities?
+                .Select(capability => new CenterCapabilityResponseDto
+                {
+                    Id = capability.Id,
+                    IssueCategory = capability.IssueCategory,
+                    VehicleBrand = capability.VehicleBrand
+                })
+                .ToList()
+                ?? new List<CenterCapabilityResponseDto>();
+        }
+
+        private static string NormalizeRequiredValue(
+            string? value,
+            string errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new BadRequestException(errorMessage);
+
+            return value.Trim().ToUpperInvariant();
+        }
+
+        private static string? NormalizeOptionalValue(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? null
+                : value.Trim().ToUpperInvariant();
         }
     }
 }

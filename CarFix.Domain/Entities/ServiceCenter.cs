@@ -24,7 +24,7 @@ namespace CarFix.Domain.Entities
         public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public ICollection<CenterSpecialty> Specialties { get; set; } = new List<CenterSpecialty>();
+        public ICollection<CenterCapability> Capabilities { get; set; } = new List<CenterCapability>();
         public ICollection<RepairOffer> Offers { get; set; } = new List<RepairOffer>();
 
         public ServiceCenter() { }

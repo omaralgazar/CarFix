@@ -1,6 +1,5 @@
 ﻿using CarFix.Application.DTOs.ServiceCenter;
 using CarFix.Application.Interfaces;
-using CarFix.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -19,7 +18,7 @@ namespace CarFix.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,ServiceCenter,Customer ,Staff")]
+        [Authorize(Roles = "Admin,ServiceCenter,Customer,Staff")]
         public async Task<IActionResult> GetServiceCenterById(Guid id)
         {
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -53,30 +52,30 @@ namespace CarFix.API.Controllers
             return Ok(serviceCenter);
         }
 
-        [HttpPost("specialties")]
+        [HttpPost("capabilities")]
         [Authorize(Roles = "ServiceCenter")]
-        public async Task<IActionResult> AddServiceCenterSpecialty([FromBody] AddSpecialtyDto dto)
+        public async Task<IActionResult> AddServiceCenterCapability([FromBody] AddCenterCapabilityDto dto)
         {
             var ownerUserId = GetCurrentUserId();
-            var serviceCenter = await _serviceCenterService.AddSpecialtyAsync(ownerUserId, dto);
+            var serviceCenter = await _serviceCenterService.AddCapabilityAsync(ownerUserId, dto);
             return Ok(serviceCenter);
         }
 
-        [HttpPut("specialties/{specialtyId}")]
+        [HttpPut("capabilities/{capabilityId}")]
         [Authorize(Roles = "ServiceCenter")]
-        public async Task<IActionResult> UpdateServiceCenterSpecialty(Guid specialtyId, [FromBody] UpdateCenterSpecialityDto dto)
+        public async Task<IActionResult> UpdateServiceCenterCapability(Guid capabilityId, [FromBody] UpdateCenterCapabilityDto dto)
         {
             var ownerUserId = GetCurrentUserId();
-            var serviceCenter = await _serviceCenterService.UpdateSpecialtyAsync(ownerUserId, specialtyId, dto);
+            var serviceCenter = await _serviceCenterService.UpdateCapabilityAsync(ownerUserId, capabilityId, dto);
             return Ok(serviceCenter);
         }
 
-        [HttpDelete("specialties/{specialtyId}")]
+        [HttpDelete("capabilities/{capabilityId}")]
         [Authorize(Roles = "ServiceCenter")]
-        public async Task<IActionResult> RemoveSpecialty(Guid specialtyId)
+        public async Task<IActionResult> RemoveCapability(Guid capabilityId)
         {
             var ownerUserId = GetCurrentUserId();
-            var serviceCenter = await _serviceCenterService.RemoveSpecialtyAsync(ownerUserId, specialtyId);
+            var serviceCenter = await _serviceCenterService.RemoveCapabilityAsync(ownerUserId, capabilityId);
             return Ok(serviceCenter);
         }
     }

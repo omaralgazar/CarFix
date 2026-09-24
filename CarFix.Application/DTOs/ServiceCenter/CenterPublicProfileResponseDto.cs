@@ -7,6 +7,6 @@
         public string Address { get; set; }
         public string Phone { get; set; }
         public decimal Rating { get; set; }
-        public List<CenterSpecialtyResponseDto> Specialties { get; set; } = new();
+        public List<CenterCapabilityResponseDto>? Capabilities { get; set; } = new();
     }
 }

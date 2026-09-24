@@ -13,6 +13,6 @@ namespace CarFix.Application.DTOs.ServiceCenter
         public decimal Rating { get; set; }
         public string VerificationStatus { get; set; }
 
-        public List<CenterSpecialtyResponseDto> Specialties { get; set; } = new List<CenterSpecialtyResponseDto>();
+        public List<CenterCapabilityResponseDto> Capabilities { get; set; } = new List<CenterCapabilityResponseDto>();
     }
 }

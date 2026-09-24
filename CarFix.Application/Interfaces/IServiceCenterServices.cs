@@ -9,9 +9,9 @@ namespace CarFix.Application.Interfaces
     {
         Task<CenterProfileResponseDto> GetProfileAsync(Guid ownerUserId);
         Task<CenterProfileResponseDto> UpdateProfileAsync(Guid ownerUserId, UpdateCenterProfileDto dto);
-        Task<CenterProfileResponseDto> AddSpecialtyAsync(Guid ownerUserId, AddSpecialtyDto dto);
-        Task<CenterProfileResponseDto> UpdateSpecialtyAsync(Guid ownerUserId, Guid specialtyId, UpdateCenterSpecialityDto dto);
-        Task<CenterProfileResponseDto> RemoveSpecialtyAsync(Guid ownerUserId, Guid specialtyId);
+        Task<CenterProfileResponseDto> AddCapabilityAsync(Guid ownerUserId, AddCenterCapabilityDto dto);
+        Task<CenterProfileResponseDto> UpdateCapabilityAsync(Guid ownerUserId, Guid capabilityId, UpdateCenterCapabilityDto dto);
+        Task<CenterProfileResponseDto> RemoveCapabilityAsync(Guid ownerUserId, Guid capabilityId);
         Task<CenterProfileResponseDto> GetProfileByOwnerIdAsync(Guid ownerId);
         Task<CenterPublicProfileResponseDto> GetPublicProfileAsync(Guid id);
     }

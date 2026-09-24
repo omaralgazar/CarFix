@@ -13,7 +13,7 @@ namespace CarFix.Infrastructure.Persistence
         public DbSet<User> Users { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<ServiceCenter> ServiceCenters { get; set; }
-        public DbSet<CenterSpecialty> CenterSpecialties { get; set; }
+        public DbSet<CenterCapability> CenterCapabilities { get; set; }
         public DbSet<RepairRequest> RepairRequests { get; set; }
         public DbSet<RepairOffer> RepairOffers { get; set; }
         public DbSet<RepairOrder> RepairOrders { get; set; }

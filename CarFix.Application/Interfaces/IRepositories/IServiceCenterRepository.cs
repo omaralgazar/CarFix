@@ -7,13 +7,18 @@ namespace CarFix.Application.Interfaces.IRepositories
         Task<ServiceCenter?> GetByIdAsync(Guid id);
         Task<ServiceCenter?> GetByOwnerIdAsync(Guid ownerId);
         Task<IEnumerable<ServiceCenter>> GetAllPendingAsync();
+
         Task AddAsync(ServiceCenter serviceCenter);
         void Update(ServiceCenter serviceCenter);
 
-        Task<CenterSpecialty?> GetSpecialtyByIdAsync(Guid specialtyId);
-        Task<IEnumerable<CenterSpecialty>> GetSpecialtiesByCenterIdAsync(Guid centerId);
-        Task AddSpecialtyAsync(CenterSpecialty specialty);
-        void RemoveSpecialty(CenterSpecialty specialty);
+        Task<CenterCapability?> GetCapabilityByIdAsync(Guid capabilityId);
+
+        Task<IEnumerable<CenterCapability>> GetCapabilitiesByCenterIdAsync(
+            Guid centerId);
+
+        Task AddCapabilityAsync(CenterCapability capability);
+
+        void RemoveCapability(CenterCapability capability);
 
         Task SaveChangesAsync();
     }
