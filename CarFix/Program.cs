@@ -39,7 +39,7 @@ namespace CarFix
             builder.Services.AddScoped<IServiceCenterServices, ServiceCenterService>();
             builder.Services.AddScoped<VehicleService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<RepairRequestService>();
+            builder.Services.AddScoped<IRepairRequestService, RepairRequestService>();
 
             // 5. تسجيل أدوات الأمان والتشفير
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
