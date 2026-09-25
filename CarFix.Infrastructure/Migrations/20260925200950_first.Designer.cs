@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarFix.Infrastructure.Migrations
 {
     [DbContext(typeof(CarFixDbContext))]
-    [Migration("20260924133317_cap1")]
-    partial class cap1
+    [Migration("20260925200950_first")]
+    partial class first
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -248,7 +248,8 @@ namespace CarFix.Infrastructure.Migrations
 
                     b.HasIndex("CenterId");
 
-                    b.HasIndex("RequestId");
+                    b.HasIndex("RequestId", "CenterId")
+                        .IsUnique();
 
                     b.ToTable("RepairOffers", (string)null);
                 });

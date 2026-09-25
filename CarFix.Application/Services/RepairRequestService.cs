@@ -22,12 +22,15 @@ namespace CarFix.Application.Services
 
         public async Task<RepairRequestResponseDto> CreateRequestAsync(Guid customerUserId, CreateRepairRequestDto dto)
         {
-            // 1. التحقق من وجود السيارة وتبعيّتها للعميل
             var vehicle = await _vehicleRepository.GetByIdAsync(dto.VehicleId);
             if (vehicle == null || vehicle.VehicleOwnererId != customerUserId)
                 throw new NotFoundException("Vehicle not found or does not belong to the user.");
 
+            if (string.IsNullOrWhiteSpace(dto.IssueCategory))
+                throw new BadRequestException("Issue category is required.");
 
+            if (string.IsNullOrWhiteSpace(dto.IssueDescription))
+                throw new BadRequestException("Issue description is required.");
             var repairRequest = new RepairRequest
             {
                 Id = Guid.NewGuid(),

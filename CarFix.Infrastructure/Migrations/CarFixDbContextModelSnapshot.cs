@@ -245,7 +245,8 @@ namespace CarFix.Infrastructure.Migrations
 
                     b.HasIndex("CenterId");
 
-                    b.HasIndex("RequestId");
+                    b.HasIndex("RequestId", "CenterId")
+                        .IsUnique();
 
                     b.ToTable("RepairOffers", (string)null);
                 });

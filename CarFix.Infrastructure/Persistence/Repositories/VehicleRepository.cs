@@ -45,7 +45,7 @@ namespace CarFix.Infrastructure.Persistence.Repositories
                 .ToListAsync();
         }
 
-        public Task<Vehicle> GetFirstRemainingVehicleAsync(Guid customerId, Guid excludeVehicleId)
+        public Task<Vehicle?> GetFirstRemainingVehicleAsync(Guid customerId, Guid excludeVehicleId)
         {
             return _context.Vehicles.FirstOrDefaultAsync(v => v.VehicleOwnererId == customerId
                                                       && !v.IsDeleted

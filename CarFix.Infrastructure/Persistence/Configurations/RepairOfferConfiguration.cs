@@ -26,6 +26,12 @@ namespace CarFix.Infrastructure.Persistence.Configurations
                 .WithMany(sc => sc.Offers)
                 .HasForeignKey(o => o.CenterId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(offer => new
+            {
+                offer.RequestId,
+                offer.CenterId
+            }).IsUnique();
         }
     }
 }
