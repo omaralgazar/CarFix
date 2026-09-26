@@ -40,6 +40,7 @@ namespace CarFix
             builder.Services.AddScoped<VehicleService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IRepairRequestService, RepairRequestService>();
+            builder.Services.AddScoped<IRepairOfferService, RepairOfferService>();
 
             // 5. تسجيل أدوات الأمان والتشفير
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();

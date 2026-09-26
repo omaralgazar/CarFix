@@ -7,10 +7,10 @@ namespace CarFix.Application.Interfaces
 {
     public interface IRepairOfferService
     {
-        Task<OfferResponseDto> CreateOfferAsync(Guid centerUserId, CreateOfferDto dto);
-        Task<OfferResponseDto> UpdateOfferAsync(Guid centerUserId, Guid offerId, UpdateOfferDto dto);
-        Task WithdrawOfferAsync(Guid centerUserId, Guid offerId);
-        Task<IEnumerable<OfferResponseDto>> GetMyOffersAsync(Guid centerUserId);
+        Task<OfferResponseDto> CreateOfferAsync(Guid centerOwnerId, CreateOfferDto dto);
+        Task<OfferResponseDto> UpdateOfferAsync(Guid centerOwnerId, Guid offerId, UpdateOfferDto dto);
+        Task WithdrawOfferAsync(Guid centerOwnerId, Guid offerId);
+        Task<IEnumerable<OfferResponseDto>> GetMyOffersAsync(Guid centerOwnerId);
         Task<IEnumerable<OfferResponseDto>> GetOffersForRequestAsync(Guid customerUserId, Guid repairRequestId);
     }
 }
