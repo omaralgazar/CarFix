@@ -4,7 +4,9 @@ using System.Text;
 
 namespace CarFix.Application.DTOs.ServiceCenter.RepairOfferDto
 {
-    internal class UpdateOfferDto
+    public class UpdateOfferDto
     {
+        public decimal Cost { get; set; }
+        public int DurationInHours { get; set; }
     }
 }

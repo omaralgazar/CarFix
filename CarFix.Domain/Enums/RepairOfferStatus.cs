@@ -10,6 +10,7 @@ namespace CarFix.Domain.Enums
     {
         Pending,
         Accepted,
-        Rejected
+        Rejected,
+        Withdrawn
     }
 }

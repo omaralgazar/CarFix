@@ -56,9 +56,7 @@ namespace CarFix.Application.Services
         }
 
 
-        public async Task CancelRequestAsync(
-                                                Guid customerUserId,
-                                                Guid requestId)     
+        public async Task CancelRequestAsync( Guid customerUserId,Guid requestId)     
         {
             var repairRequest = await _repairRequestRepository
                 .GetByIdAsync(requestId);
