@@ -36,12 +36,14 @@ namespace CarFix
             builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             builder.Services.AddScoped<IRepairRequestRepository, RepairRequestRepository>();
             builder.Services.AddScoped<IRepairOfferRepository, RepairOfferRepository>();
+            builder.Services.AddScoped<IRepairOrderRepository, RepairOrderRepository>();
             // 4. تسجيل الـ Application Services
             builder.Services.AddScoped<IServiceCenterServices, ServiceCenterService>();
             builder.Services.AddScoped<VehicleService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IRepairRequestService, RepairRequestService>();
             builder.Services.AddScoped<IRepairOfferService, RepairOfferService>();
+            builder.Services.AddScoped<IRepairOrderService, RepairOrderService>();
 
             // 5. تسجيل أدوات الأمان والتشفير
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
