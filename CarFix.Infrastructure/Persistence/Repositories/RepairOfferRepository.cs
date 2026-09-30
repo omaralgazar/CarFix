@@ -52,6 +52,18 @@ namespace CarFix.Infrastructure.Persistence.Repositories
                 .ToListAsync();
         }
 
+        public async Task RejectOtherPendingOffersAsync(Guid repairRequestId, Guid acceptedOfferId)
+        {
+            var pendingOffers = await _context.RepairOffers
+                .Where(offer => offer.RequestId == repairRequestId && offer.Id != acceptedOfferId && offer.Status == RepairOfferStatus.Pending)
+                .ToListAsync();
+            foreach (var offer in pendingOffers)
+            {
+                offer.Status = RepairOfferStatus.Rejected;
+            }
+            await _context.SaveChangesAsync();
+        }
+
         public async Task AddAsync(RepairOffer repairOffer)
         {
             await _context.RepairOffers.AddAsync(repairOffer);

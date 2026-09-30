@@ -9,6 +9,7 @@ namespace CarFix.Domain.Enums
     public enum RepairOrderStatus
     {
         Accepted,
+        PendingCheckIn,
         InProgress,
         PendingScopeChange,
         ReadyForPickup,

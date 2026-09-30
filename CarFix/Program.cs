@@ -35,6 +35,7 @@ namespace CarFix
             builder.Services.AddScoped<IServiceCenterRepository, ServiceCenterRepository>();
             builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             builder.Services.AddScoped<IRepairRequestRepository, RepairRequestRepository>();
+            builder.Services.AddScoped<IRepairOfferRepository, RepairOfferRepository>();
             // 4. تسجيل الـ Application Services
             builder.Services.AddScoped<IServiceCenterServices, ServiceCenterService>();
             builder.Services.AddScoped<VehicleService>();

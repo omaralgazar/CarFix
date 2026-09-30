@@ -14,6 +14,9 @@ namespace CarFix.Application.Interfaces.IRepositories
 
         Task<IEnumerable<RepairOffer>> GetByRequestIdAsync(
             Guid repairRequestId);
+        Task RejectOtherPendingOffersAsync(
+                Guid repairRequestId,
+                Guid acceptedOfferId);
 
         Task AddAsync(RepairOffer repairOffer);
 
