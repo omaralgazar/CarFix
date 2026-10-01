@@ -13,7 +13,8 @@ namespace CarFix.Application.Interfaces
         Task<OtpResponseDto> GenerateCheckOutOtpAsync(Guid customerId, Guid orderId);
         Task<OrderTrackingResponseDto> ConfirmCheckOutAsync(Guid centerUserId, Guid orderId, ConfirmCheckOutDto dto);
         Task<OrderTrackingResponseDto> MarkReadyForPickupAsync(Guid centerUserId,Guid orderId);
-        Task<OrderTrackingResponseDto> GetTrackingAsync(Guid currentUserId,Guid orderId);
+        Task<OrderTrackingResponseDto> GetTrackingForCustomerAsync(Guid currentUserId,Guid orderId);
+        Task<OrderTrackingResponseDto> GetTrackingForServiceCenterAsync(Guid currentUserId, Guid orderId);
 
     }
 }

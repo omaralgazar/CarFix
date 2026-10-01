@@ -18,13 +18,24 @@ namespace CarFix.API.Controllers
         }
 
         [HttpGet("{orderId:guid}")]
-        [Authorize(Roles = "Customer,ServiceCenter")]
-        public async Task<IActionResult> GetRepairOrderAsync(Guid orderId)
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> GetRepairOrderForCustomerAsync(Guid orderId)
         {
             var currentUserId = GetCurrentUserId();
 
             var repairOrder = await _repairOrderService
-                .GetTrackingAsync(currentUserId, orderId);
+                .GetTrackingForCustomerAsync(currentUserId, orderId);
+
+            return Ok(repairOrder);
+        }
+        [HttpGet("{orderId:guid}/center")]
+        [Authorize(Roles = "ServiceCenter")]
+        public async Task<IActionResult> GetRepairOrderForServiceCenterAsync(Guid orderId)
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var repairOrder = await _repairOrderService
+                .GetTrackingForServiceCenterAsync(currentUserId, orderId);
 
             return Ok(repairOrder);
         }
@@ -36,7 +47,7 @@ namespace CarFix.API.Controllers
             var customerId = GetCurrentUserId();
             var orderTrackingResponse = await _repairOrderService
                 .AcceptOfferAsync(customerId, repairRequestId, offerId);
-            return CreatedAtAction(nameof(GetRepairOrderAsync), new { orderId = orderTrackingResponse.OrderId }, orderTrackingResponse);
+            return CreatedAtAction(nameof(GetRepairOrderForCustomerAsync), new { orderId = orderTrackingResponse.OrderId }, orderTrackingResponse);
         }
 
         [HttpPost("{orderId:guid}/check-in-otp")]

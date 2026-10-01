@@ -260,14 +260,28 @@ namespace CarFix.Application.Services
             return MapToResponseDto(repairOrder, repairOrder.RepairRequest, repairOrder.AcceptedOffer, serviceCenter, repairOrder.RepairRequest.Vehicle);
         }
          
-        public async Task<OrderTrackingResponseDto> GetTrackingAsync(Guid currentUserId, Guid orderId)
+        public async Task<OrderTrackingResponseDto> GetTrackingForCustomerAsync(Guid currentUserId, Guid orderId)
         {
             var repairOrder = await _repairOrderRepository.GetRepairOrderByIdAsync(orderId);
             if (repairOrder == null ||
-                     repairOrder.RepairRequest.CustomerId != currentUserId)
+                     repairOrder.RepairRequest.CustomerId != currentUserId )
             {
                 throw new NotFoundException("Repair order not found.");
             }
+            
+            return MapToResponseDto(repairOrder, repairOrder.RepairRequest, repairOrder.AcceptedOffer, repairOrder.AcceptedOffer.Center, repairOrder.RepairRequest.Vehicle);
+
+        }
+
+        public async Task<OrderTrackingResponseDto> GetTrackingForServiceCenterAsync(Guid currentUserId, Guid orderId)
+        {
+            var repairOrder = await _repairOrderRepository.GetRepairOrderByIdAsync(orderId);
+            if (repairOrder == null ||
+                     repairOrder.AcceptedOffer.Center.OwnerUserId != currentUserId)
+            {
+                throw new NotFoundException("Repair order not found.");
+            }
+
             return MapToResponseDto(repairOrder, repairOrder.RepairRequest, repairOrder.AcceptedOffer, repairOrder.AcceptedOffer.Center, repairOrder.RepairRequest.Vehicle);
 
         }
