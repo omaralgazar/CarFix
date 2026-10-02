@@ -111,7 +111,8 @@ namespace CarFix.Application.Services
             {
                 Id = Guid.NewGuid(),
                 OwnerUserId = newUser.Id,
-                Name = dto.Name,           
+                Name = dto.Name,
+                Email = dto.Email,
                 Address = dto.Address,
                 Phone = dto.Phone,
                 Rating = 0,
