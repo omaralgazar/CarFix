@@ -26,6 +26,8 @@ namespace CarFix.Infrastructure.Persistence
         public DbSet<Dispute> Disputes { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
+        public DbSet<ServiceCenterImages> ServiceCenterImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

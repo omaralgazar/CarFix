@@ -14,6 +14,7 @@ namespace CarFix.Domain.Entities
         public string Name { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
+        public string? AvatarUrl { get; set; }
         public UserRoles Role { get; set; }
         public string PasswordHash { get; set; }
         public bool IsEmailVerified { get; set; }
@@ -27,6 +28,7 @@ namespace CarFix.Domain.Entities
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
         public ICollection<TokenTransaction> TokenTransactions { get; set; } = new List<TokenTransaction>();
+        public ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
         public ServiceCenter? ServiceCenter { get; set; }
 
         public User() { }

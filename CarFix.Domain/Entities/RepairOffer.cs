@@ -14,10 +14,12 @@ namespace CarFix.Domain.Entities
         public RepairRequest Request { get; set; }
         public Guid CenterId { get; set; }
         public ServiceCenter Center { get; set; }
-        public Decimal Cost { get; set; } = Decimal.Zero;
+        public decimal Cost { get; set; } = decimal.Zero;
         public int DurationInHours { get; set; } = 0;
         public decimal GracePeriodHours => Math.Min(DurationInHours * 0.2m, 24);
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public decimal DeliveryFee { get; set; } = decimal.Zero;
+        public decimal? EstimatedDistanceKm { get; set; }
         public RepairOfferStatus Status { get; set; }
         public RepairOffer() { }
     }

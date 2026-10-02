@@ -19,6 +19,16 @@ namespace CarFix.Domain.Entities
         public string? ImageUrls { get; set; }
         public RepairRequestStatus Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public FulfillmentMethod FulfillmentMethod { get; set; }
+        public Guid? PickupAddressId { get; set; }
+        public UserAddress? PickupAddress { get; set; }
+
+        public string? PickupContactName { get; set; }
+        public string? PickupContactPhone { get; set; }
+        public string? PickupAddressSnapshot { get; set; }
+
+        public decimal? PickupLatitude { get; set; }
+        public decimal? PickupLongitude { get; set; }
 
         public ICollection<RepairOffer> Offers { get; set; } = new List<RepairOffer>();
         public RepairOrder? Order { get; set; }

@@ -27,6 +27,13 @@ namespace CarFix.Infrastructure.Persistence.Configurations
                 .HasForeignKey(o => o.CenterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Property(offer => offer.DeliveryFee)
+                    .HasPrecision(18, 2)
+                    .IsRequired();
+
+            builder.Property(offer => offer.EstimatedDistanceKm)
+                .HasPrecision(10, 2);
+
             builder.HasIndex(offer => new
             {
                 offer.RequestId,

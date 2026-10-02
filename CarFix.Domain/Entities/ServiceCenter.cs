@@ -15,9 +15,17 @@ namespace CarFix.Domain.Entities
         public User Owner { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
+        public string Email { get; set; }
         public string Phone { get; set; }
         public decimal Rating { get; set; }
         public VerificationStatus VerificationStatus { get; set; }
+        public DateTime? VerificationReviewedAt { get; set; }
+        public Guid? VerifiedByAdminId { get; set; }
+        public string? RejectionReason { get; set; }
+        public string? LogoUrl { get; set; }
+        public bool DeliverySupported { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
         public bool IsBanned { get; set; }
         public int ConsecutiveDelayCount { get; set; }
         public int BanEscalationCount { get; set; }
@@ -26,7 +34,7 @@ namespace CarFix.Domain.Entities
 
         public ICollection<CenterCapability> Capabilities { get; set; } = new List<CenterCapability>();
         public ICollection<RepairOffer> Offers { get; set; } = new List<RepairOffer>();
-
+        public ICollection<ServiceCenterImages> Images { get; set; } = new List<ServiceCenterImages>();
         public ServiceCenter() { }
 
     }

@@ -24,6 +24,7 @@ namespace CarFix.Application.DTOs.RepairOrder
         public DateTime CreatedAt { get; set; }
         public DateTime? CheckedInAt { get; set; }
         public DateTime? CheckedOutAt { get; set; }
+        
         public DateTime? GracePeriodEndsAt { get; set; }
     }
 }

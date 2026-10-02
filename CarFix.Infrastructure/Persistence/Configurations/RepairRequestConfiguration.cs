@@ -21,6 +21,31 @@ namespace CarFix.Infrastructure.Persistence.Configurations
                 .HasForeignKey(r => r.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Property(request => request.FulfillmentMethod)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+            builder.Property(request => request.PickupContactName)
+                .HasMaxLength(100);
+
+            builder.Property(request => request.PickupContactPhone)
+                .HasMaxLength(20);
+
+            builder.Property(request => request.PickupAddressSnapshot)
+                .HasMaxLength(500);
+
+            builder.Property(request => request.PickupLatitude)
+                .HasPrecision(9, 6);
+
+            builder.Property(request => request.PickupLongitude)
+                .HasPrecision(9, 6);
+
+            builder.HasOne(request => request.PickupAddress)
+                .WithMany()
+                .HasForeignKey(request => request.PickupAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasOne(r => r.Vehicle)
                 .WithMany(v => v.RepairRequests)
                 .HasForeignKey(r => r.VehicleId)

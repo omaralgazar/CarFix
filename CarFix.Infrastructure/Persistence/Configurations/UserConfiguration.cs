@@ -22,6 +22,9 @@ namespace CarFix.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(user => user.AvatarUrl)
+                     .HasMaxLength(1000);
+
             builder.Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(200);

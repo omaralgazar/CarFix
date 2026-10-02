@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CarFix.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class first : Migration
+    public partial class NewAdds : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,6 +19,7 @@ namespace CarFix.Infrastructure.Migrations
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    AvatarUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
                     IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false),
@@ -103,9 +104,17 @@ namespace CarFix.Infrastructure.Migrations
                     OwnerUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Address = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
                     Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Rating = table.Column<decimal>(type: "numeric(3,2)", nullable: false),
                     VerificationStatus = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    VerificationReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    VerifiedByAdminId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RejectionReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    LogoUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    DeliverySupported = table.Column<bool>(type: "boolean", nullable: false),
+                    Latitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
+                    Longitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
                     IsBanned = table.Column<bool>(type: "boolean", nullable: false),
                     ConsecutiveDelayCount = table.Column<int>(type: "integer", nullable: false),
                     BanEscalationCount = table.Column<int>(type: "integer", nullable: false),
@@ -118,6 +127,41 @@ namespace CarFix.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_ServiceCenters_Users_OwnerUserId",
                         column: x => x.OwnerUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ServiceCenters_Users_VerifiedByAdminId",
+                        column: x => x.VerifiedByAdminId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Label = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ContactName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ContactPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    AddressLine = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    City = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Area = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Latitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
+                    Longitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserAddresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserAddresses_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -168,6 +212,27 @@ namespace CarFix.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ServiceCenterImages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ServiceCenterId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ImageUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceCenterImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceCenterImages_ServiceCenters_ServiceCenterId",
+                        column: x => x.ServiceCenterId,
+                        principalTable: "ServiceCenters",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RepairRequests",
                 columns: table => new
                 {
@@ -178,11 +243,24 @@ namespace CarFix.Infrastructure.Migrations
                     IssueDescription = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
                     ImageUrls = table.Column<string>(type: "text", nullable: true),
                     Status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FulfillmentMethod = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    PickupAddressId = table.Column<Guid>(type: "uuid", nullable: true),
+                    PickupContactName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    PickupContactPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    PickupAddressSnapshot = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    PickupLatitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: true),
+                    PickupLongitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RepairRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RepairRequests_UserAddresses_PickupAddressId",
+                        column: x => x.PickupAddressId,
+                        principalTable: "UserAddresses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_RepairRequests_Users_CustomerId",
                         column: x => x.CustomerId,
@@ -207,6 +285,8 @@ namespace CarFix.Infrastructure.Migrations
                     Cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     DurationInHours = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeliveryFee = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    EstimatedDistanceKm = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     Status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false)
                 },
                 constraints: table =>
@@ -243,7 +323,15 @@ namespace CarFix.Infrastructure.Migrations
                     OriginalDurationInHours = table.Column<int>(type: "integer", nullable: false),
                     ExtendedDurationInHours = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FulfillmentMethod = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    PickupContactName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    PickupContactPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    PickupAddressSnapshot = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    PickupLatitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: true),
+                    PickupLongitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: true),
+                    DeliveryFee = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    EstimatedDistanceKm = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -501,6 +589,11 @@ namespace CarFix.Infrastructure.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RepairRequests_PickupAddressId",
+                table: "RepairRequests",
+                column: "PickupAddressId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RepairRequests_VehicleId",
                 table: "RepairRequests",
                 column: "VehicleId");
@@ -522,6 +615,11 @@ namespace CarFix.Infrastructure.Migrations
                 column: "RepairOrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ServiceCenterImages_ServiceCenterId_DisplayOrder",
+                table: "ServiceCenterImages",
+                columns: new[] { "ServiceCenterId", "DisplayOrder" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ServiceCenters_OwnerUserId",
                 table: "ServiceCenters",
                 column: "OwnerUserId",
@@ -534,6 +632,11 @@ namespace CarFix.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_ServiceCenters_VerifiedByAdminId",
+                table: "ServiceCenters",
+                column: "VerifiedByAdminId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TokenTransactions_CustomerId",
                 table: "TokenTransactions",
                 column: "CustomerId");
@@ -542,6 +645,11 @@ namespace CarFix.Infrastructure.Migrations
                 name: "IX_TokenTransactions_InvoiceId",
                 table: "TokenTransactions",
                 column: "InvoiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserAddresses_UserId",
+                table: "UserAddresses",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
@@ -599,6 +707,9 @@ namespace CarFix.Infrastructure.Migrations
                 name: "ScopeChangeRequests");
 
             migrationBuilder.DropTable(
+                name: "ServiceCenterImages");
+
+            migrationBuilder.DropTable(
                 name: "TokenTransactions");
 
             migrationBuilder.DropTable(
@@ -621,6 +732,9 @@ namespace CarFix.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ServiceCenters");
+
+            migrationBuilder.DropTable(
+                name: "UserAddresses");
 
             migrationBuilder.DropTable(
                 name: "Vehicles");

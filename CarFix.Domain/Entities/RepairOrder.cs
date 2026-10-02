@@ -22,7 +22,17 @@ namespace CarFix.Domain.Entities
         public int ExtendedDurationInHours { get; set; }
         public RepairOrderStatus Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public FulfillmentMethod FulfillmentMethod { get; set; }
 
+        public string? PickupContactName { get; set; }
+        public string? PickupContactPhone { get; set; }
+        public string? PickupAddressSnapshot { get; set; }
+
+        public decimal? PickupLatitude { get; set; }
+        public decimal? PickupLongitude { get; set; }
+
+        public decimal DeliveryFee { get; set; } = decimal.Zero;
+        public decimal? EstimatedDistanceKm { get; set; }
         public ICollection<ScopeChangeRequest> ScopeChangeRequests { get; set; } = new List<ScopeChangeRequest>();
         public ICollection<Dispute> Disputes { get; set; } = new List<Dispute>();
         public Invoice? Invoice { get; set; }

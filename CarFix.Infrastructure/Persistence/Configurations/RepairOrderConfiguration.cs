@@ -46,6 +46,33 @@ namespace CarFix.Infrastructure.Persistence.Configurations
                 .WithOne(r => r.RepairOrder)
                 .HasForeignKey<Review>(r => r.RepairOrderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(order => order.FulfillmentMethod)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+            builder.Property(order => order.PickupContactName)
+                .HasMaxLength(100);
+
+            builder.Property(order => order.PickupContactPhone)
+                .HasMaxLength(20);
+
+            builder.Property(order => order.PickupAddressSnapshot)
+                .HasMaxLength(500);
+
+            builder.Property(order => order.PickupLatitude)
+                .HasPrecision(9, 6);
+
+            builder.Property(order => order.PickupLongitude)
+                .HasPrecision(9, 6);
+
+            builder.Property(order => order.DeliveryFee)
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            builder.Property(order => order.EstimatedDistanceKm)
+                .HasPrecision(10, 2);
         }
     }
 }

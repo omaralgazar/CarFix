@@ -256,6 +256,7 @@ namespace CarFix.Application.Services
             if (repairOrder.Status != RepairOrderStatus.InProgress)
                 throw new BadRequestException("Repair order is not in a state that allows marking as ready for pickup.");
             repairOrder.Status = RepairOrderStatus.ReadyForPickup;
+            
             await _repairOrderRepository.SaveChangesAsync();
             return MapToResponseDto(repairOrder, repairOrder.RepairRequest, repairOrder.AcceptedOffer, serviceCenter, repairOrder.RepairRequest.Vehicle);
         }
@@ -304,7 +305,8 @@ namespace CarFix.Application.Services
                 CreatedAt = repairOrder.CreatedAt,
                 CheckedInAt = repairOrder.CheckedInAt,
                 CheckedOutAt = repairOrder.CheckedOutAt,
-                GracePeriodEndsAt = repairOrder.GracePeriodEndsAt
+                GracePeriodEndsAt = repairOrder.GracePeriodEndsAt,
+                
             };
         }
     }

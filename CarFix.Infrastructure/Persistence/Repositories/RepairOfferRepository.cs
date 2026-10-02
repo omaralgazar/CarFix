@@ -61,7 +61,7 @@ namespace CarFix.Infrastructure.Persistence.Repositories
             {
                 offer.Status = RepairOfferStatus.Rejected;
             }
-            await _context.SaveChangesAsync();
+            
         }
 
         public async Task AddAsync(RepairOffer repairOffer)

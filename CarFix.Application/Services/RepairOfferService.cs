@@ -28,14 +28,41 @@ namespace CarFix.Application.Services
             var serviceCenter = await _serviceCenterRepository.GetByOwnerIdAsync(centerOwnerId);
             if (serviceCenter == null)
                 throw new NotFoundException("Service center not found.");
-
+            if (serviceCenter.OwnerUserId != centerOwnerId)
+                throw new BadRequestException("You are not the owner of this service center.");
+            if (serviceCenter.IsBanned ||
+                serviceCenter.VerificationStatus != VerificationStatus.Approved)
+            {
+                throw new BadRequestException(
+                    "Service center is not allowed to submit offers.");
+            }
             var repairRequest = await _repairRequestRepository.GetByIdAsync(dto.RepairRequestId);
             if (repairRequest == null)
                 throw new NotFoundException("Repair request not found.");
 
             if (repairRequest.Status != RepairRequestStatus.OpenForBidding)
                 throw new BadRequestException("This request is no longer accepting offers.");
+            if (repairRequest.Vehicle == null)
+            {
+                throw new NotFoundException("Vehicle not found.");
+            }
 
+            var vehicleBrand = repairRequest.Vehicle.Brand
+                .Trim()
+                .ToUpperInvariant();
+
+            var canHandleRequest = serviceCenter.Capabilities.Any(capability =>
+                capability.IssueCategory == repairRequest.IssueCategory &&
+                (
+                    capability.VehicleBrand == null ||
+                    capability.VehicleBrand == vehicleBrand
+                ));
+
+            if (!canHandleRequest)
+            {
+                throw new BadRequestException(
+                    "This service center does not support this repair request.");
+            }
             var existingOffer = await _repairOfferRepository.GetByRequestAndCenterAsync(dto.RepairRequestId, serviceCenter.Id);
             if (existingOffer != null)
                 throw new ConflictException("You have already submitted an offer for this request.");

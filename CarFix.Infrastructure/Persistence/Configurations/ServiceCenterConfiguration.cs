@@ -18,7 +18,26 @@ namespace CarFix.Infrastructure.Persistence.Configurations
 
             builder.Property(sc => sc.OwnerUserId)
                 .IsRequired();
-                
+
+            builder.Property(center => center.LogoUrl)
+                 .HasMaxLength(1000);
+
+            builder.Property(center => center.DeliverySupported)
+                .IsRequired();
+
+            builder.Property(center => center.Latitude)
+                .HasPrecision(9, 6);
+
+            builder.Property(center => center.Longitude)
+                .HasPrecision(9, 6);
+
+            builder.Property(center => center.RejectionReason)
+                .HasMaxLength(500);
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(center => center.VerifiedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(sc => sc.Phone)
                 .IsRequired()
