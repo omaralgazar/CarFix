@@ -8,5 +8,7 @@ namespace CarFix.Application.DTOs.ServiceCenter.RepairOfferDto
     {
         public decimal Cost { get; set; }
         public int DurationInHours { get; set; }
+        public decimal? DeliveryFee { get; set; }
+        public decimal? EstimatedDistanceKm { get; set; }
     }
 }

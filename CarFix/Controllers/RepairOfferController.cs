@@ -43,6 +43,17 @@ namespace CarFix.API.Controllers
             return Ok(repairOffers);
         }
 
+        [HttpPut("{offerId:guid}")]
+        [Authorize(Roles = "ServiceCenter")]
+        public async Task<IActionResult> UpdateOfferAsync(Guid offerId, [FromBody] UpdateOfferDto dto)
+        {
+            var centerOwnerId = GetCurrentUserId();
+
+            var repairOffer = await _repairOfferService
+                .UpdateOfferAsync(centerOwnerId, offerId, dto);
+            return Ok(repairOffer);
+        }
+
         [HttpPatch("{offerId:guid}/withdraw")]
         [Authorize(Roles = "ServiceCenter")]
         public async Task<IActionResult> WithdrawOfferAsync(Guid offerId)

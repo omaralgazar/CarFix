@@ -15,6 +15,9 @@ namespace CarFix.Application.DTOs.ServiceCenter.RepairOfferDto
         public int DurationInHours { get; set; }
         public decimal GracePeriodHours { get; set; }
         public string Status { get; set; }
+        public decimal DeliveryFee { get; set; }
+        public decimal? EstimatedDistanceKm { get; set; }
+        public decimal TotalCost { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

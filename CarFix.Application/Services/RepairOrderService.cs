@@ -61,6 +61,14 @@ namespace CarFix.Application.Services
                 Status = RepairOrderStatus.PendingCheckIn,
                 OriginalDurationInHours = repairOffer.DurationInHours,
                 ExtendedDurationInHours = 0,
+                FulfillmentMethod = repairRequest.FulfillmentMethod,
+                PickupContactName = repairRequest.PickupContactName,
+                PickupContactPhone = repairRequest.PickupContactPhone,
+                PickupAddressSnapshot = repairRequest.PickupAddressSnapshot,
+                PickupLatitude = repairRequest.PickupLatitude,
+                PickupLongitude = repairRequest.PickupLongitude,
+                DeliveryFee = repairOffer.DeliveryFee,
+                EstimatedDistanceKm = repairOffer.EstimatedDistanceKm,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -171,7 +179,7 @@ namespace CarFix.Application.Services
                 throw new NotFoundException("Repair order not found.");
             }
 
-            if (repairOrder.Status != RepairOrderStatus.ReadyForPickup)
+            if (repairOrder.Status != RepairOrderStatus.ReadyForHandover)
             {
                 throw new BadRequestException(
                     "Repair order is not ready for pickup.");
@@ -213,7 +221,7 @@ namespace CarFix.Application.Services
                 throw new NotFoundException("Repair order not found.");
             }
 
-            if (repairOrder.Status != RepairOrderStatus.ReadyForPickup)
+            if (repairOrder.Status != RepairOrderStatus.ReadyForHandover)
             {
                 throw new BadRequestException(
                     "Repair order is not in a state that allows check-out confirmation.");
@@ -245,7 +253,7 @@ namespace CarFix.Application.Services
                 repairOrder.RepairRequest.Vehicle);
         }
 
-        public async Task<OrderTrackingResponseDto> MarkReadyForPickupAsync(Guid centerUserId, Guid orderId)
+        public async Task<OrderTrackingResponseDto> MarkReadyForHandoverAsync(Guid centerUserId, Guid orderId)
         {
            var serviceCenter = await _serviceCenterRepository.GetByOwnerIdAsync(centerUserId);
             if (serviceCenter == null || serviceCenter.IsBanned || serviceCenter.VerificationStatus != VerificationStatus.Approved)
@@ -255,7 +263,7 @@ namespace CarFix.Application.Services
                 throw new NotFoundException("Repair order not found.");
             if (repairOrder.Status != RepairOrderStatus.InProgress)
                 throw new BadRequestException("Repair order is not in a state that allows marking as ready for pickup.");
-            repairOrder.Status = RepairOrderStatus.ReadyForPickup;
+            repairOrder.Status = RepairOrderStatus.ReadyForHandover;
             
             await _repairOrderRepository.SaveChangesAsync();
             return MapToResponseDto(repairOrder, repairOrder.RepairRequest, repairOrder.AcceptedOffer, serviceCenter, repairOrder.RepairRequest.Vehicle);
@@ -302,6 +310,15 @@ namespace CarFix.Application.Services
                 Cost = repairOffer.Cost,
                 OriginalDurationInHours = repairOffer.DurationInHours,
                 ExtendedDurationInHours = repairOrder.ExtendedDurationInHours,
+                FulfillmentMethod = repairOrder.FulfillmentMethod.ToString(),
+                DeliveryFee = repairOrder.DeliveryFee,
+                EstimatedDistanceKm = repairOrder.EstimatedDistanceKm,
+                TotalCost = repairOffer.Cost + repairOrder.DeliveryFee,
+                PickupContactName = repairOrder.PickupContactName,
+                PickupContactPhone = repairOrder.PickupContactPhone,
+                PickupAddressSnapshot = repairOrder.PickupAddressSnapshot,
+                PickupLatitude = repairOrder.PickupLatitude,
+                PickupLongitude = repairOrder.PickupLongitude,
                 CreatedAt = repairOrder.CreatedAt,
                 CheckedInAt = repairOrder.CheckedInAt,
                 CheckedOutAt = repairOrder.CheckedOutAt,

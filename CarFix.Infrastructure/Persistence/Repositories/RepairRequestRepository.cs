@@ -36,15 +36,14 @@ namespace CarFix.Infrastructure.Persistence.Repositories
             await _context.RepairRequests.AddAsync(repairRequest);
         }
 
-        public async Task<List<ServiceCenter>> GetMatchingServiceCentersAsync(
-                 string issueCategory,
-                 string vehicleBrand)
+        public async Task<List<ServiceCenter>> GetMatchingServiceCentersAsync(string issueCategory,string vehicleBrand,bool requiresDelivery)
         {
             return await _context.ServiceCenters
                 .Where(center =>
                     !center.IsDeleted &&
                     !center.IsBanned &&
                     center.VerificationStatus == VerificationStatus.Approved &&
+                    (!requiresDelivery || center.DeliverySupported) &&
                     center.Capabilities.Any(capability =>
                         capability.IssueCategory == issueCategory &&
                         (

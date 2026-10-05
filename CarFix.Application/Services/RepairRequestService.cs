@@ -14,10 +14,12 @@ namespace CarFix.Application.Services
     {
         private readonly IRepairRequestRepository _repairRequestRepository;
         private readonly IVehicleRepository _vehicleRepository;
-        public RepairRequestService(IRepairRequestRepository repairRequestRepository, IVehicleRepository vehicleRepository)
+        private readonly IUserAddressRepository _userAddressRepository;
+        public RepairRequestService(IRepairRequestRepository repairRequestRepository, IVehicleRepository vehicleRepository, IUserAddressRepository userAddressRepository)
         {
             _repairRequestRepository = repairRequestRepository;
             _vehicleRepository = vehicleRepository;
+            _userAddressRepository = userAddressRepository;
         }
 
         public async Task<RepairRequestResponseDto> CreateRequestAsync(Guid customerUserId, CreateRepairRequestDto dto)
@@ -31,6 +33,31 @@ namespace CarFix.Application.Services
 
             if (string.IsNullOrWhiteSpace(dto.IssueDescription))
                 throw new BadRequestException("Issue description is required.");
+            UserAddress? pickupAddress = null;
+
+            if (!Enum.IsDefined(dto.FulfillmentMethod))
+                throw new BadRequestException("Invalid fulfillment method.");
+
+            if (dto.FulfillmentMethod == FulfillmentMethod.CenterPickupAndReturn)
+            {
+                if (!dto.PickupAddressId.HasValue)
+                    throw new BadRequestException(
+                        "Pickup address is required when delivery is selected.");
+
+                pickupAddress = await _userAddressRepository.GetByIdForUserAsync(
+                    dto.PickupAddressId.Value,
+                    customerUserId);
+
+                if (pickupAddress == null)
+                    throw new NotFoundException(
+                        "Pickup address not found or does not belong to the user.");
+            }
+            else if (dto.PickupAddressId.HasValue)
+            {
+                throw new BadRequestException(
+                    "Pickup address must not be sent for customer drop-off.");
+            }
+
             var repairRequest = new RepairRequest
             {
                 Id = Guid.NewGuid(),
@@ -39,6 +66,14 @@ namespace CarFix.Application.Services
                 IssueCategory = dto.IssueCategory.Trim().ToUpperInvariant(),
                 IssueDescription = dto.IssueDescription,
                 Status = RepairRequestStatus.OpenForBidding,
+                FulfillmentMethod = dto.FulfillmentMethod,
+
+                PickupAddressId = pickupAddress?.Id,
+                PickupContactName = pickupAddress?.ContactName,
+                PickupContactPhone = pickupAddress?.ContactPhone,
+                PickupAddressSnapshot = pickupAddress == null? null: $"{pickupAddress.AddressLine}, {pickupAddress.Area}, {pickupAddress.City}",
+                PickupLatitude = pickupAddress?.Latitude,
+                PickupLongitude = pickupAddress?.Longitude,
                 ImageUrls = dto.ImageUrls,
                 CreatedAt = DateTime.UtcNow
             };
@@ -47,9 +82,11 @@ namespace CarFix.Application.Services
             await _repairRequestRepository.SaveChangesAsync();
 
             var matchingCenters = await _repairRequestRepository
-                                        .GetMatchingServiceCentersAsync(
-                                            repairRequest.IssueCategory,
-                                            vehicle.Brand.Trim().ToUpperInvariant());
+                                    .GetMatchingServiceCentersAsync(
+                                         repairRequest.IssueCategory,
+                                         vehicle.Brand.Trim().ToUpperInvariant(),
+                                         repairRequest.FulfillmentMethod ==
+                                             FulfillmentMethod.CenterPickupAndReturn);
 
 
             return MapToResponseDto(repairRequest, vehicle);
@@ -100,9 +137,10 @@ namespace CarFix.Application.Services
                 VehicleId = repairRequest.VehicleId,
                 VehicleModel = $"{vehicle.Brand} {vehicle.Model} ({vehicle.Year}) {vehicle.LicensePlate}",
                 IssueCategory = repairRequest.IssueCategory.Trim().ToUpperInvariant(),
-                IssueDescription = repairRequest.IssueDescription,
+                IssueDescription = repairRequest.IssueDescription.Trim().ToUpperInvariant(),
                 ImageUrls = repairRequest.ImageUrls,
                 Status = repairRequest.Status.ToString(),
+                FulfillmentMethod = repairRequest.FulfillmentMethod.ToString(),
                 CreatedAt = repairRequest.CreatedAt
             };
         }

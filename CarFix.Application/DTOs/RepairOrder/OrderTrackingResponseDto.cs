@@ -20,7 +20,18 @@ namespace CarFix.Application.DTOs.RepairOrder
         public decimal Cost { get; set; }
         public int OriginalDurationInHours { get; set; }
         public int ExtendedDurationInHours { get; set; }
+        public string FulfillmentMethod { get; set; } = string.Empty;
 
+        public decimal DeliveryFee { get; set; }
+        public decimal? EstimatedDistanceKm { get; set; }
+        public decimal TotalCost { get; set; }
+
+        public string? PickupContactName { get; set; }
+        public string? PickupContactPhone { get; set; }
+        public string? PickupAddressSnapshot { get; set; }
+
+        public decimal? PickupLatitude { get; set; }
+        public decimal? PickupLongitude { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? CheckedInAt { get; set; }
         public DateTime? CheckedOutAt { get; set; }

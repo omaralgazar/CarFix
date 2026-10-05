@@ -12,7 +12,7 @@ namespace CarFix.Domain.Enums
         PendingCheckIn,
         InProgress,
         PendingScopeChange,
-        ReadyForPickup,
+        ReadyForHandover,
         Completed,
         Cancelled
     }

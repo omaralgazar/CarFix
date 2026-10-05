@@ -90,13 +90,13 @@ namespace CarFix.API.Controllers
             return Ok(orderTrackingResponse);
         }
 
-        [HttpPatch("{orderId:guid}/ready-for-pickup")]
+        [HttpPatch("{orderId:guid}/ready-for-handover")]
         [Authorize(Roles = "ServiceCenter")]
-        public async Task<IActionResult> MarkReadyForPickupAsync(Guid orderId)
+        public async Task<IActionResult> MarkReadyForHandoverAsync(Guid orderId)
         {
             var centerUserId = GetCurrentUserId();
             var orderTrackingResponse = await _repairOrderService
-                .MarkReadyForPickupAsync(centerUserId, orderId);
+                .MarkReadyForHandoverAsync(centerUserId, orderId);
             return Ok(orderTrackingResponse);
         }
     }

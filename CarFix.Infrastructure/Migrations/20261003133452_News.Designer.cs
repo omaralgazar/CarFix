@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarFix.Infrastructure.Migrations
 {
     [DbContext(typeof(CarFixDbContext))]
-    [Migration("20261001231643_NewAdds")]
-    partial class NewAdds
+    [Migration("20261003133452_News")]
+    partial class News
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

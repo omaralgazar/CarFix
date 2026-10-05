@@ -12,6 +12,9 @@ namespace CarFix.Application.DTOs.ServiceCenter
         public string Phone { get; set; }
         public decimal Rating { get; set; }
         public string VerificationStatus { get; set; }
+        public bool DeliverySupported { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
 
         public List<CenterCapabilityResponseDto> Capabilities { get; set; } = new List<CenterCapabilityResponseDto>();
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarFix.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,5 +11,7 @@ namespace CarFix.Application.DTOs.Customer.RepairRequest
         public string IssueCategory { get; set; }
         public string IssueDescription { get; set; }
         public string? ImageUrls { get; set; }
+        public Guid? PickupAddressId { get; set; }
+        public FulfillmentMethod FulfillmentMethod { get; set; }
     }
 }

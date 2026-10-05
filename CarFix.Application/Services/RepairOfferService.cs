@@ -42,6 +42,46 @@ namespace CarFix.Application.Services
 
             if (repairRequest.Status != RepairRequestStatus.OpenForBidding)
                 throw new BadRequestException("This request is no longer accepting offers.");
+            if (dto.Cost <= 0)
+                throw new BadRequestException("Offer cost must be greater than zero.");
+
+            if (dto.DurationInHours <= 0)
+                throw new BadRequestException(
+                    "Estimated duration must be greater than zero.");
+
+            decimal deliveryFee = 0;
+            decimal? estimatedDistanceKm = null;
+
+            if (repairRequest.FulfillmentMethod ==
+                FulfillmentMethod.CenterPickupAndReturn)
+            {
+                if (!serviceCenter.DeliverySupported)
+                    throw new BadRequestException(
+                        "This service center does not support delivery.");
+
+                if (!dto.DeliveryFee.HasValue ||
+                    !dto.EstimatedDistanceKm.HasValue)
+                {
+                    throw new BadRequestException(
+                        "Delivery fee and estimated distance are required.");
+                }
+
+                if (dto.DeliveryFee.Value < 0 ||
+                    dto.EstimatedDistanceKm.Value < 0)
+                {
+                    throw new BadRequestException(
+                        "Delivery fee and estimated distance cannot be negative.");
+                }
+
+                deliveryFee = dto.DeliveryFee.Value;
+                estimatedDistanceKm = dto.EstimatedDistanceKm.Value;
+            }
+            else if (dto.DeliveryFee.HasValue ||
+                     dto.EstimatedDistanceKm.HasValue)
+            {
+                throw new BadRequestException(
+                    "Delivery details are only allowed for delivery requests.");
+            }
             if (repairRequest.Vehicle == null)
             {
                 throw new NotFoundException("Vehicle not found.");
@@ -74,6 +114,9 @@ namespace CarFix.Application.Services
                 CenterId = serviceCenter.Id,
                 Cost = dto.Cost,
                 DurationInHours = dto.DurationInHours,
+                Status = RepairOfferStatus.Pending,
+                DeliveryFee = deliveryFee,
+                EstimatedDistanceKm = estimatedDistanceKm,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -95,12 +138,71 @@ namespace CarFix.Application.Services
 
             if (repairOffer.Status != RepairOfferStatus.Pending)
                 throw new BadRequestException("Only pending offers can be updated.");
+            var repairRequest = await _repairRequestRepository
+    .GetByIdAsync(repairOffer.RequestId);
+
+            if (repairRequest == null)
+                throw new NotFoundException("Repair request not found.");
+
+            if (repairRequest.Status != RepairRequestStatus.OpenForBidding)
+                throw new BadRequestException(
+                    "Offers can only be updated while the request is open for bidding.");
+
+            if (serviceCenter.IsBanned ||
+                serviceCenter.VerificationStatus != VerificationStatus.Approved)
+            {
+                throw new BadRequestException(
+                    "Service center is not allowed to update offers.");
+            }
+
+            if (dto.Cost <= 0)
+                throw new BadRequestException("Offer cost must be greater than zero.");
+
+            if (dto.DurationInHours <= 0)
+                throw new BadRequestException(
+                    "Estimated duration must be greater than zero.");
+
+            decimal deliveryFee = 0;
+            decimal? estimatedDistanceKm = null;
+
+            if (repairRequest.FulfillmentMethod ==
+                FulfillmentMethod.CenterPickupAndReturn)
+            {
+                if (!serviceCenter.DeliverySupported)
+                    throw new BadRequestException(
+                        "This service center does not support delivery.");
+
+                if (!dto.DeliveryFee.HasValue ||
+                    !dto.EstimatedDistanceKm.HasValue)
+                {
+                    throw new BadRequestException(
+                        "Delivery fee and estimated distance are required.");
+                }
+
+                if (dto.DeliveryFee.Value < 0 ||
+                    dto.EstimatedDistanceKm.Value < 0)
+                {
+                    throw new BadRequestException(
+                        "Delivery fee and estimated distance cannot be negative.");
+                }
+
+                deliveryFee = dto.DeliveryFee.Value;
+                estimatedDistanceKm = dto.EstimatedDistanceKm.Value;
+            }
+            else if (dto.DeliveryFee.HasValue ||
+                     dto.EstimatedDistanceKm.HasValue)
+            {
+                throw new BadRequestException(
+                    "Delivery details are only allowed for delivery requests.");
+            }
 
             repairOffer.Cost = dto.Cost;
             repairOffer.DurationInHours = dto.DurationInHours;
+            repairOffer.DeliveryFee = deliveryFee;
+            repairOffer.EstimatedDistanceKm = estimatedDistanceKm;
+
             await _repairOfferRepository.SaveChangesAsync();
 
-            var repairRequest = await _repairRequestRepository.GetByIdAsync(repairOffer.RequestId);
             return MapToResponseDto(repairRequest, serviceCenter, repairOffer);
         }
 
@@ -161,6 +263,9 @@ namespace CarFix.Application.Services
                 DurationInHours = repairOffer.DurationInHours,
                 GracePeriodHours = repairOffer.GracePeriodHours,
                 Status = repairOffer.Status.ToString(),
+                DeliveryFee = repairOffer.DeliveryFee,
+                EstimatedDistanceKm = repairOffer.EstimatedDistanceKm,
+                TotalCost = repairOffer.Cost + repairOffer.DeliveryFee,
                 CreatedAt = repairOffer.CreatedAt
             };
         }

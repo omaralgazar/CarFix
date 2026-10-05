@@ -43,7 +43,7 @@ namespace CarFix.API.Controllers
         }
 
 
-        [HttpPut("profile")]
+        [HttpPatch("profile")]
         [Authorize(Roles = "ServiceCenter")]
         public async Task<IActionResult> UpdateServiceCenterProfile([FromBody] UpdateCenterProfileDto dto)
         {

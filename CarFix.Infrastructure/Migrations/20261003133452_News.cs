@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CarFix.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class NewAdds : Migration
+    public partial class News : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

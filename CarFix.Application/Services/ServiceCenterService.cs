@@ -55,6 +55,14 @@ namespace CarFix.Application.Services
 
             if (!string.IsNullOrWhiteSpace(dto.Phone))
                 center.Phone = dto.Phone.Trim();
+            if (dto.DeliverySupported.HasValue)
+                center.DeliverySupported = dto.DeliverySupported.Value;
+
+            if (dto.Latitude.HasValue)
+                center.Latitude = dto.Latitude.Value;
+
+            if (dto.Longitude.HasValue)
+                center.Longitude = dto.Longitude.Value;
 
             _repository.Update(center);
             await _repository.SaveChangesAsync();
@@ -195,6 +203,9 @@ namespace CarFix.Application.Services
                 Phone = center.Phone,
                 Rating = center.Rating,
                 VerificationStatus = center.VerificationStatus.ToString(),
+                DeliverySupported = center.DeliverySupported,
+                Latitude = center.Latitude,
+                Longitude = center.Longitude,
                 Capabilities = MapCapabilities(center.Capabilities)
             };
         }
@@ -207,7 +218,8 @@ namespace CarFix.Application.Services
                 {
                     Id = capability.Id,
                     IssueCategory = capability.IssueCategory,
-                    VehicleBrand = capability.VehicleBrand
+                    VehicleBrand = capability.VehicleBrand,
+
                 })
                 .ToList()
                 ?? new List<CenterCapabilityResponseDto>();

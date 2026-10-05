@@ -13,6 +13,7 @@ namespace CarFix.Application.DTOs.Customer.RepairRequest
         public string IssueDescription { get; set; }
         public string? ImageUrls { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string FulfillmentMethod { get; set; }
         public string Status { get; set; }
     }
 }
