@@ -12,6 +12,8 @@ namespace CarFix.Application.Interfaces
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
         Task<AuthResponseDto> RefreshTokenAsync(string refreshToken);
         Task<AuthResponseDto> BootstrapSuperAdminAsync(RegisterDto dto,string bootstrapKey);
+        Task ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task ResetPasswordAsync(ResetPasswordDto dto);
         Task LogoutAsync(string refreshToken);
 
 

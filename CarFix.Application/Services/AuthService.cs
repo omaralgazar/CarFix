@@ -18,9 +18,11 @@ namespace CarFix.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IServiceCenterRepository _serviceCenterRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
+        private readonly IEmailSender _emailSender;
         private readonly BootstrapSuperAdminSettings _bootstrapSuperAdminSettings;
         private readonly JwtSettings _jwtSettings;
-        public AuthService(IPasswordHasher passwordHasher, ITokenGenerator tokenGenerator, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository ,IServiceCenterRepository serviceCenterRepository , IOptions<JwtSettings> jwtSettings , IOptions<BootstrapSuperAdminSettings> bootstrapSuperAdminSettings)
+        public AuthService(IPasswordHasher passwordHasher, ITokenGenerator tokenGenerator, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository ,IServiceCenterRepository serviceCenterRepository , IOptions<JwtSettings> jwtSettings , IOptions<BootstrapSuperAdminSettings> bootstrapSuperAdminSettings , IPasswordResetTokenRepository passwordResetTokenRepository , IEmailSender emailSender)
         {
             _passwordHasher = passwordHasher;
             _tokenGenerator = tokenGenerator;
@@ -29,6 +31,8 @@ namespace CarFix.Application.Services
             _serviceCenterRepository = serviceCenterRepository;
             _bootstrapSuperAdminSettings = bootstrapSuperAdminSettings.Value;
             _jwtSettings = jwtSettings.Value;
+            _passwordResetTokenRepository = passwordResetTokenRepository;
+            _emailSender = emailSender;
         }
 
         private static string ComputeSha256Hash(string input)
@@ -262,6 +266,95 @@ namespace CarFix.Application.Services
                 ExpiresAt = DateTime.UtcNow.AddMinutes(
                     _jwtSettings.AccessTokenMinutes)
             };
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return;
+
+            var email = dto.Email.Trim().ToLowerInvariant();
+
+            var user = await _userRepository.GetByEmailAsync(email);
+
+            if (user == null || user.IsDeleted)
+                return;
+
+            await _passwordResetTokenRepository
+                .RevokeActiveTokensForUserAsync(user.Id);
+
+            var resetToken = Convert.ToBase64String(
+                System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+
+            var passwordResetToken = new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = ComputeSha256Hash(resetToken),
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+            };
+
+            await _passwordResetTokenRepository.AddAsync(passwordResetToken);
+
+            await _passwordResetTokenRepository.SaveChangesAsync();
+
+            await _emailSender.SendPasswordResetEmailAsync(
+                user.Email,
+                resetToken);
+        }
+
+
+        public async Task ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Token))
+                throw new BadRequestException("Reset token is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.NewPassword))
+                throw new BadRequestException("New password is required.");
+
+            if (dto.NewPassword != dto.ConfirmNewPassword)
+                throw new BadRequestException(
+                    "New password and confirmation password do not match.");
+
+            var tokenHash = ComputeSha256Hash(dto.Token);
+
+            var passwordResetToken = await _passwordResetTokenRepository
+                .GetByTokenHashAsync(tokenHash);
+
+            if (passwordResetToken == null ||
+                passwordResetToken.UsedAt != null ||
+                passwordResetToken.RevokedAt != null ||
+                passwordResetToken.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new BadRequestException(
+                    "Invalid or expired reset token.");
+            }
+
+            var user = await _userRepository
+                .GetByIdAsync(passwordResetToken.UserId);
+
+            if (user == null || user.IsDeleted)
+                throw new BadRequestException(
+                    "Invalid or expired reset token.");
+
+            user.PasswordHash = _passwordHasher
+                .HashPassword(dto.NewPassword);
+
+            user.UpdatedAt = DateTime.UtcNow;
+
+            passwordResetToken.UsedAt = DateTime.UtcNow;
+
+            await _passwordResetTokenRepository
+                .RevokeActiveTokensForUserAsync(user.Id);
+
+            await _refreshTokenRepository
+                .RevokeAllByUserIdAsync(user.Id);
+
+            await _passwordResetTokenRepository.SaveChangesAsync();
         }
 
         #region Helper

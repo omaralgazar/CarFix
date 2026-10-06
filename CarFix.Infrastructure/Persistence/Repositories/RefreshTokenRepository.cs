@@ -26,6 +26,20 @@ namespace CarFix.Infrastructure.Persistence.Repositories
                 token.IsRevoked = true;
             }
         }
+        public async Task RevokeAllByUserIdAsync(Guid userId)
+        {
+            var activeTokens = await _context.RefreshTokens
+                .Where(token =>
+                    token.UserId == userId &&
+                    !token.IsRevoked &&
+                    token.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var token in activeTokens)
+            {
+                token.IsRevoked = true;
+            }
+        }
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
     }
 }

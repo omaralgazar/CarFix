@@ -9,7 +9,7 @@ namespace CarFix.Application.Interfaces.IRepositories
     {
         Task AddAsync(RefreshToken refreshToken);
         Task<RefreshToken?> GetByTokenHashAsync(string tokenHash);
-
+        Task RevokeAllByUserIdAsync(Guid userId);
         Task RevokeAsync(RefreshToken refreshToken);
         Task SaveChangesAsync();
     }

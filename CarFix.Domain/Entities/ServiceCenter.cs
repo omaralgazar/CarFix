@@ -24,8 +24,8 @@ namespace CarFix.Domain.Entities
         public string? RejectionReason { get; set; }
         public string? LogoUrl { get; set; }
         public bool DeliverySupported { get; set; }
-        public decimal Latitude { get; set; }
-        public decimal Longitude { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
         public bool IsBanned { get; set; }
         public int ConsecutiveDelayCount { get; set; }
         public int BanEscalationCount { get; set; }

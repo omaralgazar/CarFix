@@ -193,6 +193,48 @@ namespace CarFix.Application.Services
             };
         }
 
+        public async Task ResubmitForReviewAsync(Guid ownerUserId) {
+            var center = await _repository.GetByOwnerIdAsync(ownerUserId);
+
+            if (center == null || center.IsDeleted)
+                throw new NotFoundException("Service center not found.");
+
+            if (center.VerificationStatus != VerificationStatus.Rejected)
+                throw new BadRequestException(
+                    "Only rejected service centers can be resubmitted for review.");
+
+            if (string.IsNullOrWhiteSpace(center.Name) ||
+                string.IsNullOrWhiteSpace(center.Address) ||
+                string.IsNullOrWhiteSpace(center.Phone))
+            {
+                throw new BadRequestException(
+                    "Complete the center profile before resubmitting.");
+            }
+
+            if (center.Capabilities == null || !center.Capabilities.Any())
+            {
+                throw new BadRequestException(
+                    "Add at least one capability before resubmitting.");
+            }
+
+            if (center.DeliverySupported &&
+                (!center.Latitude.HasValue || !center.Longitude.HasValue))
+            {
+                throw new BadRequestException(
+                    "Delivery-enabled centers must provide location coordinates.");
+            }
+
+            center.VerificationStatus = VerificationStatus.Pending;
+            center.RejectionReason = null;
+            center.VerificationReviewedAt = null;
+            center.VerifiedByAdminId = null;
+
+            await _repository.SaveChangesAsync();
+
+
+        }
+
+
         private static CenterProfileResponseDto MapToProfileDto(ServiceCenter center)
         {
             return new CenterProfileResponseDto

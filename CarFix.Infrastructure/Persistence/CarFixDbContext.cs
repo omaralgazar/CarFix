@@ -28,6 +28,7 @@ namespace CarFix.Infrastructure.Persistence
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<ServiceCenterImages> ServiceCenterImages { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

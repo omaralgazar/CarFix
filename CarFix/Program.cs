@@ -3,6 +3,7 @@ using CarFix.Application.Configuration;
 using CarFix.Application.Interfaces;
 using CarFix.Application.Interfaces.IRepositories;
 using CarFix.Application.Services;
+using CarFix.Infrastructure.Email;
 using CarFix.Infrastructure.Persistence;
 using CarFix.Infrastructure.Persistence.Configurations;
 using CarFix.Infrastructure.Persistence.Repositories;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Resend;
 using Scalar.AspNetCore;
 using System.Text;
 
@@ -30,6 +32,15 @@ namespace CarFix
             // 2. إعداد إعدادات JWT
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
             builder.Services.Configure<BootstrapSuperAdminSettings>(builder.Configuration.GetSection("BootstrapSuperAdmin"));
+            builder.Services.Configure<ResendSettings>(
+            builder.Configuration.GetSection("Resend"));
+
+            builder.Services.AddResend(options =>
+            {
+                options.ApiToken = builder.Configuration["Resend:ApiKey"]
+                    ?? throw new InvalidOperationException(
+                        "Resend API key is not configured.");
+            });
 
             // 3. تسجيل الـ Repositories (Dependency Injection)
             builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
@@ -40,7 +51,8 @@ namespace CarFix
             builder.Services.AddScoped<IRepairOfferRepository, RepairOfferRepository>();
             builder.Services.AddScoped<IRepairOrderRepository, RepairOrderRepository>();
             builder.Services.AddScoped<IUserAddressRepository, UserAddressRepository>();
-            
+            builder.Services.AddScoped<IPasswordResetTokenRepository,PasswordResetTokenRepository>();
+
             // 4. تسجيل الـ Application Services
             builder.Services.AddScoped<IServiceCenterServices, ServiceCenterService>();
             builder.Services.AddScoped<VehicleService>();
@@ -50,7 +62,7 @@ namespace CarFix
             builder.Services.AddScoped<IRepairOrderService, RepairOrderService>();
             builder.Services.AddScoped<IUserAddressService, UserAddressService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
-
+            builder.Services.AddScoped<IEmailSender, ResendEmailSender>();
             // 5. تسجيل أدوات الأمان والتشفير
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();

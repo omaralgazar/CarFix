@@ -56,6 +56,20 @@ namespace CarFix.API.Controllers
             return NoContent();
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
+        {
+            await _authService.ForgotPasswordAsync(request);
+            return NoContent();
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordDto request)
+        {
+            await _authService.ResetPasswordAsync(request);
+            return NoContent();
+        }
+
         [HttpPost("bootstrap-super-admin")]
         public async Task<ActionResult<AuthResponseDto>>BootstrapSuperAdmin([FromBody] RegisterDto request,[FromHeader(Name = "X-Bootstrap-Key")]
         string bootstrapKey)

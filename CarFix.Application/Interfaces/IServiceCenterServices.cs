@@ -14,5 +14,6 @@ namespace CarFix.Application.Interfaces
         Task<CenterProfileResponseDto> RemoveCapabilityAsync(Guid ownerUserId, Guid capabilityId);
         Task<CenterProfileResponseDto> GetProfileByOwnerIdAsync(Guid ownerId);
         Task<CenterPublicProfileResponseDto> GetPublicProfileAsync(Guid id);
+        Task ResubmitForReviewAsync(Guid ownerUserId);
     }
 }

@@ -78,5 +78,14 @@ namespace CarFix.API.Controllers
             var serviceCenter = await _serviceCenterService.RemoveCapabilityAsync(ownerUserId, capabilityId);
             return Ok(serviceCenter);
         }
+
+        [HttpPost("resubmit-for-review")]
+        [Authorize(Roles = "ServiceCenter")]
+        public async Task<IActionResult> ResubmitForReview()
+        {
+            var ownerUserId = GetCurrentUserId();
+            await _serviceCenterService.ResubmitForReviewAsync(ownerUserId);
+            return Ok();
+        }
     }
 }

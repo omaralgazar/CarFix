@@ -19,6 +19,7 @@
 
 		<!-- حزمة OpenAPI الرسمية من Microsoft -->
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+		<PackageReference Include="Resend" Version="0.23.0" />
 
 		<!-- واجهة Scalar للتصفح -->
 		<PackageReference Include="Scalar.AspNetCore" Version="2.0.0" />
