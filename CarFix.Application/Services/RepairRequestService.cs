@@ -137,7 +137,7 @@ namespace CarFix.Application.Services
                 VehicleId = repairRequest.VehicleId,
                 VehicleModel = $"{vehicle.Brand} {vehicle.Model} ({vehicle.Year}) {vehicle.LicensePlate}",
                 IssueCategory = repairRequest.IssueCategory.Trim().ToUpperInvariant(),
-                IssueDescription = repairRequest.IssueDescription.Trim().ToUpperInvariant(),
+                IssueDescription = repairRequest.IssueDescription.Trim(),
                 ImageUrls = repairRequest.ImageUrls,
                 Status = repairRequest.Status.ToString(),
                 FulfillmentMethod = repairRequest.FulfillmentMethod.ToString(),

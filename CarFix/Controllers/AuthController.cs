@@ -55,6 +55,17 @@ namespace CarFix.API.Controllers
             await _authService.LogoutAsync(request.RefreshToken);
             return NoContent();
         }
+
+        [HttpPost("bootstrap-super-admin")]
+        public async Task<ActionResult<AuthResponseDto>>BootstrapSuperAdmin([FromBody] RegisterDto request,[FromHeader(Name = "X-Bootstrap-Key")]
+        string bootstrapKey)
+        {
+            var result = await _authService
+                .BootstrapSuperAdminAsync(request, bootstrapKey);
+
+            return StatusCode(StatusCodes.Status201Created, result);
+        }
+
     }
 
 }

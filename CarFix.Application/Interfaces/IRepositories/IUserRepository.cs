@@ -10,6 +10,7 @@ namespace CarFix.Application.Interfaces.IRepositories
         Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByEmailAsync(string email);
         Task AddAsync(User user);
+        Task<bool> HasSuperAdminAsync();
         Task SaveChangesAsync();
     }
 }

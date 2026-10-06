@@ -19,12 +19,13 @@ namespace CarFix.API.Controllers
 
         [HttpGet("{orderId:guid}")]
         [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> GetRepairOrderForCustomerAsync(Guid orderId)
+        public async Task<IActionResult> GetRepairOrderForCustomer(Guid orderId)
         {
             var currentUserId = GetCurrentUserId();
 
             var repairOrder = await _repairOrderService
                 .GetTrackingForCustomerAsync(currentUserId, orderId);
+            
 
             return Ok(repairOrder);
         }
@@ -47,7 +48,7 @@ namespace CarFix.API.Controllers
             var customerId = GetCurrentUserId();
             var orderTrackingResponse = await _repairOrderService
                 .AcceptOfferAsync(customerId, repairRequestId, offerId);
-            return CreatedAtAction(nameof(GetRepairOrderForCustomerAsync), new { orderId = orderTrackingResponse.OrderId }, orderTrackingResponse);
+            return CreatedAtAction(nameof(GetRepairOrderForCustomer), new { orderId = orderTrackingResponse.OrderId }, orderTrackingResponse);
         }
 
         [HttpPost("{orderId:guid}/check-in-otp")]

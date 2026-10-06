@@ -5,6 +5,7 @@ using CarFix.Application.Interfaces;
 using CarFix.Application.Interfaces.IRepositories;
 using CarFix.Domain.Entities;
 using CarFix.Domain.Enums;
+using CarFix.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.Options;
 
 
@@ -17,14 +18,16 @@ namespace CarFix.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IServiceCenterRepository _serviceCenterRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly BootstrapSuperAdminSettings _bootstrapSuperAdminSettings;
         private readonly JwtSettings _jwtSettings;
-        public AuthService(IPasswordHasher passwordHasher, ITokenGenerator tokenGenerator, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository ,IServiceCenterRepository serviceCenterRepository , IOptions<JwtSettings> jwtSettings)
+        public AuthService(IPasswordHasher passwordHasher, ITokenGenerator tokenGenerator, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository ,IServiceCenterRepository serviceCenterRepository , IOptions<JwtSettings> jwtSettings , IOptions<BootstrapSuperAdminSettings> bootstrapSuperAdminSettings)
         {
             _passwordHasher = passwordHasher;
             _tokenGenerator = tokenGenerator;
             _userRepository = userRepository;
             _refreshTokenRepository = refreshTokenRepository;
             _serviceCenterRepository = serviceCenterRepository;
+            _bootstrapSuperAdminSettings = bootstrapSuperAdminSettings.Value;
             _jwtSettings = jwtSettings.Value;
         }
 
@@ -201,6 +204,80 @@ namespace CarFix.Application.Services
 
             await _refreshTokenRepository.SaveChangesAsync();
         }
+
+
+        public async Task<AuthResponseDto> BootstrapSuperAdminAsync(RegisterDto dto,string bootstrapKey)
+        {
+            if (await _userRepository.HasSuperAdminAsync())
+                throw new NotFoundException("Bootstrap setup is no longer available.");
+
+            if (string.IsNullOrWhiteSpace(
+                    _bootstrapSuperAdminSettings.key))
+            {
+                throw new InvalidOperationException(
+                    "Bootstrap super admin key is not configured.");
+            }
+
+            if (string.IsNullOrWhiteSpace(bootstrapKey) ||
+                !KeysMatch(
+                    bootstrapKey,
+                    _bootstrapSuperAdminSettings.key))
+            {
+                throw new UnauthorizedAccessException(
+                    "Invalid bootstrap key.");
+            }
+
+            var email = dto.Email.Trim().ToLowerInvariant();
+
+            var existingUser = await _userRepository
+                .GetByEmailAsync(email);
+
+            if (existingUser != null)
+                throw new ConflictException(
+                    "A user with this email already exists.");
+
+            var superAdmin = new User
+            {
+                Id = Guid.NewGuid(),
+                Name = dto.Name.Trim(),
+                Email = email,
+                Phone = dto.Phone.Trim(),
+                PasswordHash = _passwordHasher.HashPassword(dto.Password),
+                Role = UserRoles.SuperAdmin,
+                IsEmailVerified = true,
+                IsPhoneVerified = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _userRepository.AddAsync(superAdmin);
+            await _userRepository.SaveChangesAsync();
+
+            var refreshToken = await GenerateAndStoreRefreshTokenAsync(
+                superAdmin.Id);
+
+            return new AuthResponseDto
+            {
+                AccessToken = _tokenGenerator.GenerateToken(superAdmin),
+                RefreshToken = refreshToken,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(
+                    _jwtSettings.AccessTokenMinutes)
+            };
+        }
+
+        #region Helper
+        private static bool KeysMatch(string providedKey,string configuredKey)
+        {
+            var providedBytes = System.Text.Encoding.UTF8
+                .GetBytes(providedKey);
+
+            var configuredBytes = System.Text.Encoding.UTF8
+                .GetBytes(configuredKey);
+
+            return System.Security.Cryptography.CryptographicOperations
+                .FixedTimeEquals(providedBytes, configuredBytes);
+        }
+        #endregion
+
     }
 }
 

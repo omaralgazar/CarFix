@@ -1,10 +1,10 @@
-using System.Text;
 using CarFix.API.Middleware;
 using CarFix.Application.Configuration;
 using CarFix.Application.Interfaces;
 using CarFix.Application.Interfaces.IRepositories;
 using CarFix.Application.Services;
 using CarFix.Infrastructure.Persistence;
+using CarFix.Infrastructure.Persistence.Configurations;
 using CarFix.Infrastructure.Persistence.Repositories;
 using CarFix.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using System.Text;
 
 namespace CarFix
 {
@@ -28,6 +29,7 @@ namespace CarFix
 
             // 2. إعداد إعدادات JWT
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+            builder.Services.Configure<BootstrapSuperAdminSettings>(builder.Configuration.GetSection("BootstrapSuperAdmin"));
 
             // 3. تسجيل الـ Repositories (Dependency Injection)
             builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
@@ -38,6 +40,7 @@ namespace CarFix
             builder.Services.AddScoped<IRepairOfferRepository, RepairOfferRepository>();
             builder.Services.AddScoped<IRepairOrderRepository, RepairOrderRepository>();
             builder.Services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+            
             // 4. تسجيل الـ Application Services
             builder.Services.AddScoped<IServiceCenterServices, ServiceCenterService>();
             builder.Services.AddScoped<VehicleService>();
@@ -46,6 +49,7 @@ namespace CarFix
             builder.Services.AddScoped<IRepairOfferService, RepairOfferService>();
             builder.Services.AddScoped<IRepairOrderService, RepairOrderService>();
             builder.Services.AddScoped<IUserAddressService, UserAddressService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
             // 5. تسجيل أدوات الأمان والتشفير
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();

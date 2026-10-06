@@ -36,6 +36,8 @@ namespace CarFix.Infrastructure.Persistence.Repositories
         {
             return await _context.ServiceCenters
                 .Include(center => center.Capabilities)
+                .Include(center => center.Owner)
+                .Include(center => center.Images)
                 .Where(center =>
                     center.VerificationStatus == VerificationStatus.Pending &&
                     !center.IsDeleted)
@@ -78,6 +80,29 @@ namespace CarFix.Infrastructure.Persistence.Repositories
         {
             _context.CenterCapabilities.Remove(capability);
         }
+
+        public async Task<IEnumerable<ServiceCenter>> GetServiceCentersAsync()
+        {
+            return await _context.ServiceCenters
+                .Where(center => !center.IsDeleted)
+                .Include(center => center.Capabilities)
+                .Include(center => center.Owner)
+                .Include(center => center.Images)
+                .ToListAsync();
+        }
+
+        public async Task<ServiceCenter?> GetByIdForAdminAsync(Guid centerId)
+        {
+            return await _context.ServiceCenters
+                .Include(center => center.Capabilities)
+                .Include(center => center.Owner)
+                .Include(center => center.Images)
+                .FirstOrDefaultAsync(center =>
+                    center.Id == centerId &&
+                    !center.IsDeleted);
+        }
+
+        
 
         public async Task SaveChangesAsync()
         {

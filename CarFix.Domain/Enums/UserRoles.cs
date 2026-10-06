@@ -11,6 +11,7 @@ namespace CarFix.Domain.Enums
         Admin,
         Customer,
         ServiceCenter,
+        SuperAdmin,
         Staff
     }
 }

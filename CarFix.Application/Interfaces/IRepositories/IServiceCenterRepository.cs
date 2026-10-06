@@ -19,6 +19,8 @@ namespace CarFix.Application.Interfaces.IRepositories
         Task AddCapabilityAsync(CenterCapability capability);
 
         void RemoveCapability(CenterCapability capability);
+        Task <IEnumerable<ServiceCenter>> GetServiceCentersAsync();
+        Task<ServiceCenter?> GetByIdForAdminAsync(Guid centerId);
 
         Task SaveChangesAsync();
     }

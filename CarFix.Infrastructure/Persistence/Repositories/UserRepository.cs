@@ -1,5 +1,6 @@
 ﻿using CarFix.Application.Interfaces.IRepositories;
 using CarFix.Domain.Entities;
+using CarFix.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,12 @@ namespace CarFix.Infrastructure.Persistence.Repositories
             return _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
         public async Task AddAsync(User user) => await _context.Users.AddAsync(user);
+        public Task<bool> HasSuperAdminAsync()
+        {
+            return _context.Users.AnyAsync(user =>
+                user.Role == UserRoles.SuperAdmin &&
+                !user.IsDeleted);
+        }
 
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 
