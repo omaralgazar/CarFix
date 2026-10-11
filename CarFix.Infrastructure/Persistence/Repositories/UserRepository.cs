@@ -22,7 +22,8 @@ namespace CarFix.Infrastructure.Persistence.Repositories
         }
         public Task<User?> GetByEmailAsync(string email)
         {
-            return _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var normalized = (email ?? string.Empty).Trim().ToLowerInvariant();
+            return _context.Users.FirstOrDefaultAsync(u => u.Email == normalized);
         }
         public async Task AddAsync(User user) => await _context.Users.AddAsync(user);
         public Task<bool> HasSuperAdminAsync()

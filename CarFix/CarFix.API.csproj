@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<!-- حزم الكيانات والأمان وقاعدة البيانات -->
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12">

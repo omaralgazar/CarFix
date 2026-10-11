@@ -9,13 +9,19 @@ using CarFix.Infrastructure.Persistence.Configurations;
 using CarFix.Infrastructure.Persistence.Repositories;
 using CarFix.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Resend;
 using Scalar.AspNetCore;
 using System.Text;
+using System.Threading.RateLimiting;
+using CarFix.API.Filters;
+using CarFix.Application.Validators.Auth;
+using FluentValidation;
 
 namespace CarFix
 {
@@ -96,6 +102,57 @@ namespace CarFix
                 };
             });
 
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<ValidationFilter>();
+            });
+
+            builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
+
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                // الأخطر: تأسيس الـ SuperAdmin. محاولات قليلة جداً لكل IP
+                options.AddPolicy("bootstrap", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 3,
+                            Window = TimeSpan.FromMinutes(15),
+                            QueueLimit = 0
+                        }));
+
+                // forgot-password: يمنع email bombing
+                options.AddPolicy("forgot-password", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 3,
+                            Window = TimeSpan.FromMinutes(15),
+                            QueueLimit = 0
+                        }));
+
+                // login / reset-password / refresh: تخمين باسوردات وتوكنات
+                options.AddPolicy("auth-sensitive", httpContext =>
+                    RateLimitPartition.GetSlidingWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new SlidingWindowRateLimiterOptions
+                        {
+                            PermitLimit = 10,
+                            Window = TimeSpan.FromMinutes(5),
+                            SegmentsPerWindow = 5,
+                            QueueLimit = 0
+                        }));
+            });
+
+            builder.Services.Configure<ForwardedHeadersOptions>(o =>
+            {
+                o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
+
             builder.Services.AddAuthorization();
             builder.Services.AddControllers();
 
@@ -150,7 +207,10 @@ namespace CarFix
                 });
             }
 
+            app.UseForwardedHeaders();
             app.UseHttpsRedirection();
+            app.UseRateLimiter();
+           
 
             app.UseAuthentication();
             app.UseAuthorization();

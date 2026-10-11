@@ -1,9 +1,10 @@
 ﻿using CarFix.Application.DTOs.AuthDto;
 using CarFix.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,6 +35,7 @@ namespace CarFix.API.Controllers
             return Ok(result);
         }
 
+        [EnableRateLimiting("auth-sensitive")]
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto request)
         {
@@ -41,6 +43,7 @@ namespace CarFix.API.Controllers
             return Ok(result);
         }
 
+        [EnableRateLimiting("auth-sensitive")]
         [HttpPost("refresh-token")]
         public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
@@ -56,13 +59,14 @@ namespace CarFix.API.Controllers
             return NoContent();
         }
 
+        [EnableRateLimiting("forgot-password")]
         [HttpPost("forgot-password")]
         public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
         {
             await _authService.ForgotPasswordAsync(request);
             return NoContent();
         }
-
+        [EnableRateLimiting("auth-sensitive")]
         [HttpPost("reset-password")]
         public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordDto request)
         {
@@ -70,6 +74,7 @@ namespace CarFix.API.Controllers
             return NoContent();
         }
 
+        [EnableRateLimiting("bootstrap")]
         [HttpPost("bootstrap-super-admin")]
         public async Task<ActionResult<AuthResponseDto>>BootstrapSuperAdmin([FromBody] RegisterDto request,[FromHeader(Name = "X-Bootstrap-Key")]
         string bootstrapKey)

@@ -42,6 +42,9 @@ namespace CarFix.Application.Services
             return Convert.ToBase64String(bytes);
         }
 
+        private static string NormalizeEmail(string? email) =>
+                                         (email ?? string.Empty).Trim().ToLowerInvariant();
+
         private async Task<string> GenerateAndStoreRefreshTokenAsync(Guid userId)
         {
             var refreshTokenPlainText = Convert.ToBase64String(
@@ -64,7 +67,8 @@ namespace CarFix.Application.Services
         }
         public async Task<AuthResponseDto> RegisterCustomerAsync(RegisterDto dto)
         {
-            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+            var email = NormalizeEmail(dto.Email);
+            var existingUser = await _userRepository.GetByEmailAsync(email);
             if (existingUser != null)
                 throw new ConflictException("This Email already exists.");
 
@@ -72,7 +76,7 @@ namespace CarFix.Application.Services
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
-                Email = dto.Email,
+                Email = email,
                 Phone = dto.Phone,
                 PasswordHash = _passwordHasher.HashPassword(dto.Password),
                 Role = UserRoles.Customer,
@@ -96,7 +100,8 @@ namespace CarFix.Application.Services
 
         public async Task<AuthResponseDto> RegisterCenterAsync(RegisterCenterDto dto)
         {
-            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+            var email = NormalizeEmail(dto.Email);
+            var existingUser = await _userRepository.GetByEmailAsync(email);
             if (existingUser != null)
             {
                 throw new ConflictException("User with this email already exists.");
@@ -105,7 +110,7 @@ namespace CarFix.Application.Services
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
-                Email = dto.Email,
+                Email = email,
                 Phone = dto.Phone,
                 PasswordHash = _passwordHasher.HashPassword(dto.Password),
                 Role = UserRoles.ServiceCenter,
@@ -119,7 +124,7 @@ namespace CarFix.Application.Services
                 Id = Guid.NewGuid(),
                 OwnerUserId = newUser.Id,
                 Name = dto.Name,
-                Email = dto.Email,
+                Email = email,
                 Address = dto.Address,
                 Phone = dto.Phone,
                 Rating = 0,
@@ -142,19 +147,40 @@ namespace CarFix.Application.Services
             };
         }
 
+        private static string? _dummyPasswordHash;
+
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var user = await _userRepository.GetByEmailAsync(dto.Email);
-            if (user == null)
-                throw new UnauthorizedAccessException("Invalid email or password.");
+            var email = NormalizeEmail(dto.Email);
+            var password = dto.Password ?? string.Empty;
 
-            var (isValid, needsRehash) = _passwordHasher.VerifyPassword(user.PasswordHash, dto.Password);
+            var user = await _userRepository.GetByEmailAsync(email);
+
+            if (user == null || user.IsDeleted)
+            {
+                _dummyPasswordHash ??= _passwordHasher.HashPassword("dummy-password-for-timing");
+                _passwordHasher.VerifyPassword(_dummyPasswordHash, password);
+                throw new UnauthorizedAccessException("Invalid email or password.");
+            }
+
+            var (isValid, needsRehash) = _passwordHasher.VerifyPassword(user.PasswordHash, password);
             if (!isValid)
                 throw new UnauthorizedAccessException("Invalid email or password.");
 
+            if (user.Role == UserRoles.ServiceCenter)
+            {
+                var center = await _serviceCenterRepository.GetByOwnerIdAsync(user.Id);
+
+                if (center == null || center.IsDeleted)
+                    throw new UnauthorizedAccessException("Invalid email or password.");
+
+                if (center.IsBanned)
+                    throw new ForbiddenException("This service center account is banned.");
+            }
+
             if (needsRehash)
             {
-                user.PasswordHash = _passwordHasher.HashPassword(dto.Password);
+                user.PasswordHash = _passwordHasher.HashPassword(password);
                 await _userRepository.SaveChangesAsync();
             }
 
@@ -167,7 +193,6 @@ namespace CarFix.Application.Services
                 ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenMinutes)
             };
         }
-
         public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
         {
             var refreshTokenHash = ComputeSha256Hash(refreshToken);
@@ -177,7 +202,7 @@ namespace CarFix.Application.Services
                 throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
             var user = await _userRepository.GetByIdAsync(storedRefreshToken.UserId);
-            if (user == null)
+            if (user == null || user.IsDeleted)
                 throw new UnauthorizedAccessException("User not found.");
 
             storedRefreshToken.IsRevoked = true;  
@@ -231,7 +256,7 @@ namespace CarFix.Application.Services
                     "Invalid bootstrap key.");
             }
 
-            var email = dto.Email.Trim().ToLowerInvariant();
+            var email = NormalizeEmail(dto.Email);
 
             var existingUser = await _userRepository
                 .GetByEmailAsync(email);
@@ -273,7 +298,7 @@ namespace CarFix.Application.Services
             if (string.IsNullOrWhiteSpace(dto.Email))
                 return;
 
-            var email = dto.Email.Trim().ToLowerInvariant();
+            var email = NormalizeEmail(dto.Email);
 
             var user = await _userRepository.GetByEmailAsync(email);
 

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarFix.Infrastructure.Migrations
 {
     [DbContext(typeof(CarFixDbContext))]
-    [Migration("20261006205808_version-2")]
-    partial class version2
+    [Migration("20261011202249_NewVersion")]
+    partial class NewVersion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
