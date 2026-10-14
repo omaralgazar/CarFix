@@ -235,6 +235,9 @@ namespace CarFix.Infrastructure.Migrations
                     b.Property<bool>("IsRevoked")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("RotatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -703,6 +706,11 @@ namespace CarFix.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -711,6 +719,17 @@ namespace CarFix.Infrastructure.Migrations
 
                     b.Property<bool>("IsPhoneVerified")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFailedLoginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LockoutCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -733,6 +752,12 @@ namespace CarFix.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 

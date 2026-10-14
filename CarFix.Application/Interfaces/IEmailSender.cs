@@ -7,9 +7,8 @@ namespace CarFix.Application.Interfaces
     
         public interface IEmailSender
         {
-            Task SendPasswordResetEmailAsync(
-                string email,
-                string resetToken);
-        }
+        Task SendPasswordResetEmailAsync(string email, string resetToken);
+        Task SendAccountLockedEmailAsync(string email, int lockoutMinutes);
+    }
     
 }

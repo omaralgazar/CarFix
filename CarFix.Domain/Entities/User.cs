@@ -19,6 +19,10 @@ namespace CarFix.Domain.Entities
         public string PasswordHash { get; set; }
         public bool IsEmailVerified { get; set; }
         public bool IsPhoneVerified { get; set; }
+        public int FailedLoginAttempts { get; set; }
+        public int LockoutCount { get; set; }
+        public DateTime? LockoutEnd { get; set; }
+        public DateTime? LastFailedLoginAt { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

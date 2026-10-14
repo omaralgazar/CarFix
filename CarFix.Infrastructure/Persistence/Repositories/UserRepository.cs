@@ -33,6 +33,7 @@ namespace CarFix.Infrastructure.Persistence.Repositories
                 !user.IsDeleted);
         }
 
+        public Task ReloadAsync(User user) => _context.Entry(user).ReloadAsync();
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 
 

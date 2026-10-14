@@ -45,5 +45,26 @@ namespace CarFix.Infrastructure.Email
 
             await _resend.EmailSendAsync(message);
         }
+        public async Task SendAccountLockedEmailAsync(string email, int lockoutMinutes)
+        {
+            var message = new EmailMessage
+            {
+                From = $"{_settings.FromName} <{_settings.FromEmail}>",
+                Subject = "Your CarFix account has been temporarily locked",
+                HtmlBody = $"""
+            <h2>Account temporarily locked</h2>
+            <p>We detected too many failed sign-in attempts on your CarFix account, so we locked it temporarily.</p>
+            <p>You can try again in <strong>{FormatLockoutDuration(lockoutMinutes)}</strong>.</p>
+            <p>If this was not you, reset your password after you regain access.</p>
+            """
+            };
+
+            message.To.Add(email);
+
+            await _resend.EmailSendAsync(message);
+        }
+
+        private static string FormatLockoutDuration(int minutes) =>
+            minutes >= 60 ? $"{minutes / 60} hour(s)" : $"{minutes} minute(s)";
     }
 }

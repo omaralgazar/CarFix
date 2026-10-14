@@ -7,6 +7,9 @@ using CarFix.Domain.Entities;
 using CarFix.Domain.Enums;
 using CarFix.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace CarFix.Application.Services
@@ -20,9 +23,27 @@ namespace CarFix.Application.Services
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<AuthService> _logger;
         private readonly BootstrapSuperAdminSettings _bootstrapSuperAdminSettings;
         private readonly JwtSettings _jwtSettings;
-        public AuthService(IPasswordHasher passwordHasher, ITokenGenerator tokenGenerator, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository ,IServiceCenterRepository serviceCenterRepository , IOptions<JwtSettings> jwtSettings , IOptions<BootstrapSuperAdminSettings> bootstrapSuperAdminSettings , IPasswordResetTokenRepository passwordResetTokenRepository , IEmailSender emailSender)
+
+        private const int MaxFailedLoginAttempts = 5;
+        private static readonly TimeSpan FailedLoginWindow = TimeSpan.FromMinutes(15);
+        private static readonly TimeSpan BaseLockoutDuration = TimeSpan.FromMinutes(15);
+        private static readonly TimeSpan MaxLockoutDuration = TimeSpan.FromHours(24);
+        private const string AccountLockedMessage = "Account is temporarily locked. Check your email for details.";
+
+        public AuthService(
+            IPasswordHasher passwordHasher,
+            ITokenGenerator tokenGenerator,
+            IUserRepository userRepository,
+            IRefreshTokenRepository refreshTokenRepository,
+            IServiceCenterRepository serviceCenterRepository,
+            IOptions<JwtSettings> jwtSettings,
+            IOptions<BootstrapSuperAdminSettings> bootstrapSuperAdminSettings,
+            IPasswordResetTokenRepository passwordResetTokenRepository,
+            IEmailSender emailSender,
+            ILogger<AuthService> logger)
         {
             _passwordHasher = passwordHasher;
             _tokenGenerator = tokenGenerator;
@@ -33,6 +54,7 @@ namespace CarFix.Application.Services
             _jwtSettings = jwtSettings.Value;
             _passwordResetTokenRepository = passwordResetTokenRepository;
             _emailSender = emailSender;
+            _logger = logger;
         }
 
         private static string ComputeSha256Hash(string input)
@@ -41,6 +63,7 @@ namespace CarFix.Application.Services
                 System.Text.Encoding.UTF8.GetBytes(input));
             return Convert.ToBase64String(bytes);
         }
+        private static readonly TimeSpan RefreshReuseGracePeriod = TimeSpan.FromSeconds(10);
 
         private static string NormalizeEmail(string? email) =>
                                          (email ?? string.Empty).Trim().ToLowerInvariant();
@@ -164,8 +187,20 @@ namespace CarFix.Application.Services
             }
 
             var (isValid, needsRehash) = _passwordHasher.VerifyPassword(user.PasswordHash, password);
+
+            if (IsLocked(user))
+                throw new ForbiddenException(AccountLockedMessage);
+
             if (!isValid)
+            {
+                await RegisterFailedLoginAsync(user);
+
+                // نفس الـ user object بعد الـ reload، فنعرف لو الطلب ده أو طلب تاني قفله
+                if (IsLocked(user))
+                    throw new ForbiddenException(AccountLockedMessage);
+
                 throw new UnauthorizedAccessException("Invalid email or password.");
+            }
 
             if (user.Role == UserRoles.ServiceCenter)
             {
@@ -178,11 +213,16 @@ namespace CarFix.Application.Services
                     throw new ForbiddenException("This service center account is banned.");
             }
 
-            if (needsRehash)
+            await SaveUserWithRetryAsync(user, u =>
             {
-                user.PasswordHash = _passwordHasher.HashPassword(password);
-                await _userRepository.SaveChangesAsync();
-            }
+                if (needsRehash)
+                    u.PasswordHash = _passwordHasher.HashPassword(password);
+
+                u.FailedLoginAttempts = 0;
+                u.LockoutCount = 0;
+                u.LockoutEnd = null;
+                u.LastFailedLoginAt = null;
+            });
 
             var refreshToken = await GenerateAndStoreRefreshTokenAsync(user.Id);
 
@@ -198,16 +238,34 @@ namespace CarFix.Application.Services
             var refreshTokenHash = ComputeSha256Hash(refreshToken);
             var storedRefreshToken = await _refreshTokenRepository.GetByTokenHashAsync(refreshTokenHash);
 
-            if (storedRefreshToken == null || storedRefreshToken.IsRevoked || storedRefreshToken.ExpiresAt < DateTime.UtcNow)
+            if (storedRefreshToken == null)
+                throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+
+            if (storedRefreshToken.IsRevoked)
+            {
+                var isReuse = storedRefreshToken.RotatedAt != null &&
+                              DateTime.UtcNow - storedRefreshToken.RotatedAt.Value > RefreshReuseGracePeriod;
+
+                if (isReuse)
+                {
+                    await _refreshTokenRepository.RevokeAllByUserIdAsync(storedRefreshToken.UserId);
+                    await _refreshTokenRepository.SaveChangesAsync();
+                }
+
+                throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+            }
+
+            if (storedRefreshToken.ExpiresAt < DateTime.UtcNow)
                 throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
             var user = await _userRepository.GetByIdAsync(storedRefreshToken.UserId);
             if (user == null || user.IsDeleted)
-                throw new UnauthorizedAccessException("User not found.");
+                throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
-            storedRefreshToken.IsRevoked = true;  
+            storedRefreshToken.IsRevoked = true;
+            storedRefreshToken.RotatedAt = DateTime.UtcNow;
 
-            var newRefreshToken = await GenerateAndStoreRefreshTokenAsync(user.Id);   
+            var newRefreshToken = await GenerateAndStoreRefreshTokenAsync(user.Id);
 
             return new AuthResponseDto
             {
@@ -370,6 +428,10 @@ namespace CarFix.Application.Services
                 .HashPassword(dto.NewPassword);
 
             user.UpdatedAt = DateTime.UtcNow;
+            user.FailedLoginAttempts = 0;
+            user.LockoutCount = 0;
+            user.LockoutEnd = null;
+            user.LastFailedLoginAt = null;
 
             passwordResetToken.UsedAt = DateTime.UtcNow;
 
@@ -393,6 +455,78 @@ namespace CarFix.Application.Services
 
             return System.Security.Cryptography.CryptographicOperations
                 .FixedTimeEquals(providedBytes, configuredBytes);
+        }
+
+
+        private static bool IsLocked(User user) =>
+    user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow;
+
+        private static TimeSpan CalculateLockoutDuration(int lockoutCount)
+        {
+            var minutes = BaseLockoutDuration.TotalMinutes * Math.Pow(2, lockoutCount - 1);
+            return TimeSpan.FromMinutes(Math.Min(minutes, MaxLockoutDuration.TotalMinutes));
+        }
+
+        private async Task SaveUserWithRetryAsync(User user, Action<User> apply)
+        {
+            for (var attempt = 1; ; attempt++)
+            {
+                apply(user);
+
+                try
+                {
+                    await _userRepository.SaveChangesAsync();
+                    return;
+                }
+                catch (DbUpdateConcurrencyException) when (attempt < 3)
+                {
+                    await _userRepository.ReloadAsync(user);
+                }
+            }
+        }
+
+        private async Task RegisterFailedLoginAsync(User user)
+        {
+            TimeSpan? newLockDuration = null;
+
+            await SaveUserWithRetryAsync(user, u =>
+            {
+                newLockDuration = null;
+
+                // طلب تاني قفل الحساب قبل ما نوصل: ما نحسبش عليه محاولة جديدة
+                if (IsLocked(u))
+                    return;
+
+                var now = DateTime.UtcNow;
+                var windowExpired = u.LastFailedLoginAt == null ||
+                                    now - u.LastFailedLoginAt.Value > FailedLoginWindow;
+
+                u.FailedLoginAttempts = windowExpired ? 1 : u.FailedLoginAttempts + 1;
+                u.LastFailedLoginAt = now;
+
+                if (u.FailedLoginAttempts < MaxFailedLoginAttempts)
+                    return;
+
+                u.LockoutCount++;
+                u.FailedLoginAttempts = 0;
+                newLockDuration = CalculateLockoutDuration(u.LockoutCount);
+                u.LockoutEnd = now.Add(newLockDuration.Value);
+            });
+
+            // الإيميل بيتبعت بس لما القفل يتطبق فعلاً في الطلب ده
+            if (newLockDuration is { } duration)
+            {
+                try
+                {
+                    await _emailSender.SendAccountLockedEmailAsync(
+                        user.Email,
+                        (int)Math.Ceiling(duration.TotalMinutes));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send account-locked email for user {UserId}", user.Id);
+                }
+            }
         }
         #endregion
 

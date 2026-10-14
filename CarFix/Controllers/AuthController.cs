@@ -21,6 +21,7 @@ namespace CarFix.API.Controllers
             _authService = authService;
         }
 
+        [EnableRateLimiting("auth-sensitive")]
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto request)
         {
@@ -28,6 +29,7 @@ namespace CarFix.API.Controllers
             return Ok(result);
         }
 
+        [EnableRateLimiting("auth-sensitive")]
         [HttpPost("register-center")]
         public async Task<ActionResult<AuthResponseDto>> RegisterCenter([FromBody] RegisterCenterDto request)
         {

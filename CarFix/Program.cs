@@ -98,7 +98,9 @@ namespace CarFix
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtSettings.Issuer,
                     ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                    ClockSkew = TimeSpan.Zero,
+                    ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 }
                 };
             });
 
@@ -154,7 +156,6 @@ namespace CarFix
             });
 
             builder.Services.AddAuthorization();
-            builder.Services.AddControllers();
 
             // 7. إعداد توثيق OpenAPI ودعم JWT لـ Scalar UI
             builder.Services.AddOpenApi(options =>

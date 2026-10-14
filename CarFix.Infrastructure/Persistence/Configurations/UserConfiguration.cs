@@ -1,6 +1,7 @@
 ﻿using CarFix.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,8 +42,23 @@ namespace CarFix.Infrastructure.Persistence.Configurations
                 .HasMaxLength(50)
                 .IsRequired();
 
+
+            builder.Property<uint>("xmin")
+                            .HasColumnName("xmin")
+                            .HasColumnType("xid")
+                            .IsRowVersion()
+                            .IsConcurrencyToken()
+                            .ValueGeneratedOnAddOrUpdate();
+
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.Phone).IsUnique();
+            builder.Property(u => u.FailedLoginAttempts)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+            builder.Property(u => u.LockoutCount)
+                .IsRequired()
+                .HasDefaultValue(0);
 
             builder.HasOne(u => u.ServiceCenter)
                .WithOne(sc => sc.Owner)
